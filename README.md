@@ -51,7 +51,9 @@ dataloader = DataLoader(train_iter, batch_size=8, shuffle=False)
 <summary> <b> Metrics </b> </summary>
 
 - **The dataset module currently contains:**
+    
     Bleu_score
+    
     Ngram_counter
 
 - **NLP related evaluation indicators**
