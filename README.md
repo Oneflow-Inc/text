@@ -58,11 +58,11 @@ dataloader = DataLoader(train_iter, batch_size=8, shuffle=False)
 
 - **NLP related evaluation metrics**
 ```python
-from flowtext.data.metrics import bleu_score
-candidate_corpus = [['My', 'full', 'pytorch', 'test'], ['Another', 'Sentence']]
-references_corpus = [[['My', 'full', 'pytorch', 'test'], ['Completely', 'Different']], [['No', 'Match']]]
-bleu_score(candidate_corpus, references_corpus)
-# 0.8408964276313782
+>>> from flowtext.data.metrics import bleu_score
+>>> candidate_corpus = [['My', 'full', 'pytorch', 'test'], ['Another', 'Sentence']]
+>>> references_corpus = [[['My', 'full', 'pytorch', 'test'], ['Completely', 'Different']], [['No', 'Match']]]
+>>> bleu_score(candidate_corpus, references_corpus)
+0.8408964276313782
 ```
 
 </details>
