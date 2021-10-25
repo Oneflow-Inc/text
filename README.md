@@ -20,9 +20,13 @@ None
 - **The dataset module currently contains:**
 
     Language modeling:   WikiText2, WikiText103, PennTreebank
-    Machine translation:   
+    
+    Machine translation:   None
+    
     Sequence tagging(e.g. POS/NER):    UDPOS, CoNLL2000Chunking 
+    
     Question answering:   SQuAD1, SQuAD2
+    
     Text classification:   AG_NEWS, SogouNews, DBpedia, YelpReviewPolarity, YelpReviewFull, YahooAnswers, AmazonReviewPolarity, AmazonReviewFull, IMDB
 
   
