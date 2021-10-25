@@ -50,7 +50,7 @@ dataloader = DataLoader(train_iter, batch_size=8, shuffle=False)
 <details>
 <summary> <b> Metrics </b> </summary>
 
-- **The dataset module currently contains:**
+- **The metrics currently contains:**
     
     Bleu_score
     
