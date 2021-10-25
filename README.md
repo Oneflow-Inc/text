@@ -56,7 +56,7 @@ dataloader = DataLoader(train_iter, batch_size=8, shuffle=False)
     
     Ngram_counter
 
-- **NLP related evaluation indicators**
+- **NLP related evaluation metrics**
 ```python
 from flowtext.data.metrics import bleu_score
 candidate_corpus = [['My', 'full', 'pytorch', 'test'], ['Another', 'Sentence']]
