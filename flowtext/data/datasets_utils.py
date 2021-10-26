@@ -6,6 +6,7 @@ import json
 import oneflow as flow
 from flowtext.utils import (
     download_from_url,
+    extract_archive,
     unicode_csv_reader,
 )
 import codecs
@@ -127,6 +128,20 @@ def _find_match(match, lst):
         if match in element:
             return element
     return None
+
+
+def _download_extract(root, url, downloaded_file, extracted_file):
+    root = os.path.abspath(root)
+    downloaded_file = os.path.abspath(downloaded_file)
+    extracted_file = os.path.abspath(extracted_file)
+    if os.path.exists(extracted_file):
+        with open(os.path.join(root, extracted_file), 'rb') as f:
+            return extracted_file
+    dataset_tar = download_from_url(url, path=os.path.join(root, downloaded_file))
+    extracted_files = extract_archive(dataset_tar)
+    assert os.path.exists(extracted_file), "extracted_file [{}] was not found in the archive [{}]".format(extracted_file, extracted_files)
+
+    return extracted_file
 
 
 def _dataset_docstring_header(fn, num_lines=None, num_classes=None):

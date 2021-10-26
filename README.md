@@ -21,7 +21,7 @@ None
 
     Language modeling:   WikiText2, WikiText103, PennTreebank
     
-    Machine translation:   None
+    Machine translation:   IWSLT2016, IWSLT2017, Multi30k
     
     Sequence tagging(e.g. POS/NER):    UDPOS, CoNLL2000Chunking 
     
@@ -59,10 +59,10 @@ dataloader = DataLoader(train_iter, batch_size=8, shuffle=False)
 - **NLP related evaluation metrics**
 ```python
 >>> from flowtext.data.metrics import bleu_score
->>> candidate_corpus = [['My', 'full', 'pytorch', 'test'], ['Another', 'Sentence']]
->>> references_corpus = [[['My', 'full', 'pytorch', 'test'], ['Completely', 'Different']], [['No', 'Match']]]
+>>> candidate_corpus = [['This', 'is', 'a', 'oneflow', 'bleu','test'], ['Another', 'Sentence']]
+>>> references_corpus = [[['This', 'is', 'a', 'oneflow', 'bleu','test'], ['Completely', 'Different']], [['No', 'Match']]]
 >>> bleu_score(candidate_corpus, references_corpus)
-0.8408964276313782
+0.889139711856842
 ```
 
 </details>
@@ -73,7 +73,7 @@ dataloader = DataLoader(train_iter, batch_size=8, shuffle=False)
 
 - **Load tokenizer**
 ```python
->>> from torchtext.data import get_tokenizer
+>>> from flowtext.data import get_tokenizer
 # The parameter ‘tokenizer’ can support spacy, moses, toktok, revtok, subword, jieba.
 >>> tokenizer = get_tokenizer(tokenizer="basic_english", language="en")
 >>> tokens = tokenizer("Today is a good day!")
