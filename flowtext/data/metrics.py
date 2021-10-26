@@ -16,7 +16,7 @@ def _compute_ngram_counter(tokens, max_n):
             associated count
 
     Examples:
-        >>> from torchtext.data.metrics import _compute_ngram_counter
+        >>> from flowtext.data.metrics import _compute_ngram_counter
         >>> tokens = ['name', 'is', 'name', 'is', 'oneflow']
         >>> _compute_ngram_counter(tokens, 2)
             Counter({
