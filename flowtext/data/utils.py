@@ -85,12 +85,12 @@ def get_tokenizer(tokenizer, language='en'):
         language: Default en
 
     Examples:
-        >>> import torchtext
-        >>> from torchtext.data import get_tokenizer
+        >>> import flowtext
+        >>> from flowtext.data import get_tokenizer
         >>> tokenizer = get_tokenizer("basic_english")
-        >>> tokens = tokenizer("You can now install TorchText using pip!")
+        >>> tokens = tokenizer("You can now install FlowText using pip!")
         >>> tokens
-        >>> ['you', 'can', 'now', 'install', 'torchtext', 'using', 'pip', '!']
+        >>> ['you', 'can', 'now', 'install', 'flowtext', 'using', 'pip', '!']
 
     """
 

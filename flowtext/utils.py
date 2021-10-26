@@ -94,14 +94,14 @@ def extract_archive(from_path, to_path=None, overwrite=False):
         List of paths to extracted files even if not overwritten.
 
     Examples:
-        >>> url = 'http://www.quest.dcs.shef.ac.uk/wmt16_files_mmt/validation.tar.gz'
+        >>> url = 'http://oneflow-public.oss-cn-beijing.aliyuncs.com/datasets/FlowText/Multi30k/validation.tar.gz'
         >>> from_path = './validation.tar.gz'
         >>> to_path = './'
-        >>> torchtext.utils.download_from_url(url, from_path)
-        >>> torchtext.utils.extract_archive(from_path, to_path)
+        >>> flowtext.utils.download_from_url(url, from_path)
+        >>> flowtext.utils.extract_archive(from_path, to_path)
         >>> ['.data/val.de', '.data/val.en']
-        >>> torchtext.utils.download_from_url(url, from_path)
-        >>> torchtext.utils.extract_archive(from_path, to_path)
+        >>> flowtext.utils.download_from_url(url, from_path)
+        >>> flowtext.utils.extract_archive(from_path, to_path)
         >>> ['.data/val.de', '.data/val.en']
 
     """
