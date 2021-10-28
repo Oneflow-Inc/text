@@ -45,7 +45,6 @@ DATASETS = {
 
 URLS = {}
 NUM_LINES = {}
-MD5 = {}
 for dataset in DATASETS:
     dataset_module_path = "flowtext.datasets." + dataset.lower()
     dataset_module = importlib.import_module(dataset_module_path)
