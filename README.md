@@ -8,8 +8,23 @@ Models, Datasets, Metrics and Utils for NLP.
 
 ## Usage
 <details>
-<summary> <b> ModelCreator </b> </summary>
-None
+<summary> <b> Models </b> </summary>
+
+- **Supported model and model type**
+
+    **bert** : {'bert-base-uncased',}
+
+- **Load the pretrained model**
+```python
+# Load the pretrained model
+>>> from flowtext.models import bert
+>>> bert = bert(pretrained=True, model_type='bert-base-uncased', checkpoint_path=None)
+    
+# In addition, you can also load normal models.    
+>>> from flowtext.models import BertModel, BertConfig
+>>> config = BertConfig()
+>>> bert = BertModel(config)
+```
 
 </details>
 
