@@ -99,3 +99,7 @@ dataloader = DataLoader(train_iter, batch_size=8, shuffle=False)
 ```
 
 </details>
+
+## License
+
+OneFlow has a BSD-style license, as found in the [LICENSE](https://github.com/Oneflow-Inc/text/blob/main/LICENSE) file.
