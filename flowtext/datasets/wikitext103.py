@@ -34,6 +34,3 @@ def WikiText103(root, split):
     logging.info('Creating {} data'.format(split))
     return _RawTextIterableDataset(DATASET_NAME,
                                    NUM_LINES[split], _read_text_iterator(path))
-
-iter = WikiText103(split='train')
-print(next(iter))

@@ -1,4 +1,7 @@
+import json
+
 from oneflow import nn
+
 
 class BertConfig(object):
     def __init__(
@@ -41,3 +44,10 @@ class BertConfig(object):
         self.add_cross_attention = add_cross_attention
         self.output_attentions = output_attentions
         self.output_hidden_states = output_hidden_states
+
+    def load_from_json(self, config_path):
+        with open(config_path, 'r', encoding='utf8') as file:
+            json_data = json.load(file)
+            for k, v in json_data.items():
+                if hasattr(self, k):
+                    setattr(self, k, v)
