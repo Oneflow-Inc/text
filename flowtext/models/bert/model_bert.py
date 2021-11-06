@@ -660,7 +660,7 @@ class BertForPreTraining(nn.Module):
         return self.cls.predictions.decoder
 
 
-def bert(pretrained:bool = False, model_type:str = 'bert-base-uncased', checkpoint_path:str = os.path.expanduser('~/.pretrained_flow')):
+def bert(pretrained:bool = False, model_type:str = 'bert-base-uncased', checkpoint_path:str = './pretrained_flow'):
     config = BertConfig()
     if pretrained == False:
         return BertModel(config)
