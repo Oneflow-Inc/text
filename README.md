@@ -36,15 +36,15 @@ bert = BertModel(config)
 
 - **The dataset module currently contains:**
 
-    Language modeling:   WikiText2, WikiText103, PennTreebank
+    Language modeling:   [WikiText2, WikiText103, PennTreebank]
     
-    Machine translation:   IWSLT2016, IWSLT2017, Multi30k
+    Machine translation:   [IWSLT2016, IWSLT2017, Multi30k]
     
-    Sequence tagging(e.g. POS/NER):    UDPOS, CoNLL2000Chunking 
+    Sequence tagging(e.g. POS/NER):    [UDPOS, CoNLL2000Chunking] 
     
-    Question answering:   SQuAD1, SQuAD2
+    Question answering:   [SQuAD1, SQuAD2]
     
-    Text classification:   AG_NEWS, SogouNews, DBpedia, YelpReviewPolarity, YelpReviewFull, YahooAnswers, AmazonReviewPolarity, AmazonReviewFull, IMDB
+    Text classification:   [AG_NEWS, SogouNews, DBpedia, YelpReviewPolarity, YelpReviewFull, YahooAnswers, AmazonReviewPolarity, AmazonReviewFull, IMDB]
 
   
 - **Load NLP related datasets, and build dataloader**
