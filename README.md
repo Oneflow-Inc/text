@@ -100,6 +100,12 @@ dataloader = DataLoader(train_iter, batch_size=8, shuffle=False)
 
 </details>
 
+## Disclaimer on Datasets
+
+The datasets in flowtext.datasets is a utility library that downloads and prepares public datasets. We are not responsible for hosting and distributing these data sets, nor do we guarantee their quality and fairness, nor do we claim to have the license of the data set. It is your responsibility to determine whether you have permission to use the dataset under the dataset's license. 
+
+If you are the dataset owner and want to update any part of it (description, citation, etc.), or do not want your dataset to be included in this library, please contact us through GitHub questions.
+
 ## License
 
 OneFlow has a BSD-style license, as found in the [LICENSE](https://github.com/Oneflow-Inc/text/blob/main/LICENSE) file.
