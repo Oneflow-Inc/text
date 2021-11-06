@@ -10,7 +10,7 @@ from tqdm import tqdm
 import oneflow as flow
 
 
-def load_state_dict_from_url(url, saved_path=os.path.expanduser('~/.pretrained_flow')):
+def load_state_dict_from_url(url:str, saved_path:str = './pretrained_flow'):
     url_parse = urlparse(url)
     file_name = url_parse.path.split('/')[-1].split('.')[0]
     package_name = url_parse.path.split('/')[-1]
@@ -21,6 +21,7 @@ def load_state_dict_from_url(url, saved_path=os.path.expanduser('~/.pretrained_f
     if not os.path.exists(file_path):
         if not os.path.exists(package_path):
             download_url_to_file(url, package_path)
+            print("The pretrained-model file saved in '{}'".format(os.path.abspath(saved_path)))
             with tarfile.open(package_path) as f:
                 f.extractall(saved_path)
     cpt = get_cpt(file_path)
