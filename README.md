@@ -11,21 +11,23 @@ Models, Datasets, Metrics and Utils for NLP.
 <summary> <b> Models </b> </summary>
 
 - **Supported model and model type**
-
-    **bert** : {'bert-base-uncased',}
+    
+    **bert** : {"bert-base-uncased", }
 
 - **Load the pretrained model**
-```python
-# Load the pretrained model
->>> from flowtext.models import bert
->>> bert = bert(pretrained=True, model_type='bert-base-uncased', checkpoint_path=None)
     
-# In addition, you can also load normal models.    
->>> from flowtext.models import BertModel, BertConfig
->>> config = BertConfig()
->>> bert = BertModel(config)
-```
+```python
+# Load the pretrained model.
+from flowtext.models import bert
+bert = bert(pretrained=True, model_type=bert-base-uncased', checkpoint_path=None)
 
+# In addition, you can also load normal models.
+from flowtext.models import BertConfig, BertModel
+config = BertConfig()
+bert = BertModel(config)
+```
+    
+    
 </details>
 
 
@@ -34,15 +36,15 @@ Models, Datasets, Metrics and Utils for NLP.
 
 - **The dataset module currently contains:**
 
-    Language modeling:   WikiText2, WikiText103, PennTreebank
+    Language modeling:   [WikiText2, WikiText103, PennTreebank]
     
-    Machine translation:   IWSLT2016, IWSLT2017, Multi30k
+    Machine translation:   [IWSLT2016, IWSLT2017, Multi30k]
     
-    Sequence tagging(e.g. POS/NER):    UDPOS, CoNLL2000Chunking 
+    Sequence tagging(e.g. POS/NER):    [UDPOS, CoNLL2000Chunking] 
     
-    Question answering:   SQuAD1, SQuAD2
+    Question answering:   [SQuAD1, SQuAD2]
     
-    Text classification:   AG_NEWS, SogouNews, DBpedia, YelpReviewPolarity, YelpReviewFull, YahooAnswers, AmazonReviewPolarity, AmazonReviewFull, IMDB
+    Text classification:   [AG_NEWS, SogouNews, DBpedia, YelpReviewPolarity, YelpReviewFull, YahooAnswers, AmazonReviewPolarity, AmazonReviewFull, IMDB]
 
   
 - **Load NLP related datasets, and build dataloader**
@@ -97,3 +99,13 @@ dataloader = DataLoader(train_iter, batch_size=8, shuffle=False)
 ```
 
 </details>
+
+## Disclaimer on Datasets
+
+The datasets in flowtext.datasets is a utility library that downloads and prepares public datasets. We are not responsible for hosting and distributing these data sets, nor do we guarantee their quality and fairness, nor do we claim to have the license of the data set. It is your responsibility to determine whether you have permission to use the dataset under the dataset's license. 
+
+If you are the dataset owner and want to update any part of it (description, citation, etc.), or do not want your dataset to be included in this library, please contact us through GitHub questions.
+
+## License
+
+OneFlow has a BSD-style license, as found in the [LICENSE](https://github.com/Oneflow-Inc/text/blob/main/LICENSE) file.

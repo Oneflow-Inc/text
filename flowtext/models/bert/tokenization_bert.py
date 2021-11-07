@@ -258,4 +258,3 @@ class BertTokenizer(object):
         out_string = " ".join(tokens).replace(" ##", "").strip()
         return out_string
     
-    

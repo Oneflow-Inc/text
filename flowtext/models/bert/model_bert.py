@@ -1,11 +1,17 @@
 import math
 import os
-from typing import Optional, Tuple
+from flowtext.models.activations import ACT2FN
+from flowtext.models.bert.config_bert import BertConfig
+from flowtext.models.utils import load_state_dict_from_url
 
 import oneflow as flow
 from oneflow import nn
 from oneflow.nn import CrossEntropyLoss
 
+
+model_urls = {
+    'bert-base-uncased':'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-base-uncased-oneflow.tar.gz'
+    }    
 
 class BertEmbeddings(nn.Module):
     def __init__(self, config):
@@ -189,7 +195,10 @@ class BertIntermediate(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.intermediate_size)
-        self.intermediate_act_fn = config.hidden_act
+        if isinstance(config.hidden_act, str):
+            self.intermediate_act_fn = ACT2FN[config.hidden_act]
+        else:
+            self.intermediate_act_fn = config.hidden_act
 
     def forward(self, hidden_states):
         hidden_states = self.dense(hidden_states)
@@ -357,7 +366,10 @@ class BertPredictionHeadTransform(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-        self.transform_act_fn = config.hidden_act
+        if isinstance(config.hidden_act, str):
+            self.transform_act_fn = ACT2FN[config.hidden_act]
+        else:
+            self.transform_act_fn = config.hidden_act
         self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
     
     def forward(self, hidden_states):
@@ -646,3 +658,18 @@ class BertForPreTraining(nn.Module):
     
     def get_output_embeddings(self):
         return self.cls.predictions.decoder
+
+
+def bert(pretrained:bool = False, model_type:str = 'bert-base-uncased', checkpoint_path:str = './pretrained_flow'):
+    config = BertConfig()
+    if pretrained == False:
+        return BertModel(config)
+    assert model_type in model_urls, "The model_type {} not identifiable, please confirm."
+    cpt, config_file = load_state_dict_from_url(model_urls[model_type], checkpoint_path)
+    config.load_from_json(config_file)
+    bert = BertModel(config)
+    try:
+        bert.load_state_dict(cpt)
+    except:
+        print('Checkpoint loading failed.')
+    return bert, config

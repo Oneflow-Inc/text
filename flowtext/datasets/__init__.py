@@ -45,11 +45,13 @@ DATASETS = {
 
 URLS = {}
 NUM_LINES = {}
-MD5 = {}
 for dataset in DATASETS:
     dataset_module_path = "flowtext.datasets." + dataset.lower()
     dataset_module = importlib.import_module(dataset_module_path)
-    URLS[dataset] = dataset_module.URL
+    if hasattr(dataset_module, 'URL'):
+        URLS[dataset] = dataset_module.URL
+    else:
+        URLS[dataset] = dataset_module.SUPPORTED_DATASETS['URL']
     NUM_LINES[dataset] = dataset_module.NUM_LINES
 
 __all__ = sorted(list(map(str, DATASETS.keys())))

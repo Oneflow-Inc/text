@@ -32,6 +32,3 @@ def YelpReviewPolarity(root, split):
     path = _find_match(split + '.csv', extracted_files)
     return _RawTextIterableDataset(DATASET_NAME, NUM_LINES[split],
                                    _create_data_from_csv(path))
-
-iter = YelpReviewPolarity(split='train')
-print(next(iter))
