@@ -1,4 +1,5 @@
 import hashlib
+from json import load
 import os
 import tarfile
 from urllib.parse import urlparse
@@ -10,7 +11,9 @@ from tqdm import tqdm
 import oneflow as flow
 
 
-def load_state_dict_from_url(url:str, saved_path:str = './pretrained_flow'):
+def load_state_dict_from_url(url:str, saved_path:str):
+    if saved_path == None:
+        saved_path = './pretrained_flow'
     url_parse = urlparse(url)
     file_name = url_parse.path.split('/')[-1].split('.')[0]
     package_name = url_parse.path.split('/')[-1]
@@ -76,6 +79,13 @@ def download_url_to_file(url, dst, hash_prefix=None, progress=True):
         f.close()
         if os.path.exists(f.name):
             os.remove(f.name)
+
+
+def load_state_dict_from_file(checkpoint_path):
+    cpt = get_cpt(checkpoint_path)
+    config_path = get_json(checkpoint_path)
+    assert flow.load(cpt),'The checkpoint_path error.'
+    return flow.load(cpt), config_path
 
 
 def get_cpt(file_path):
