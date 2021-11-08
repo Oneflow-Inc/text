@@ -2,7 +2,7 @@ import math
 import os
 from flowtext.models.activations import ACT2FN
 from flowtext.models.bert.config_bert import BertConfig
-from flowtext.models.utils import load_state_dict_from_url
+from flowtext.models.utils import load_state_dict_from_url, load_state_dict_from_file
 
 import oneflow as flow
 from oneflow import nn
@@ -10,7 +10,8 @@ from oneflow.nn import CrossEntropyLoss
 
 
 model_urls = {
-    'bert-base-uncased':'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-base-uncased-oneflow.tar.gz'
+    'bert-base-uncased':'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-base-uncased-oneflow.tar.gz',
+    'bert-base-chinese':'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-base-chinese-oneflow.tar.gz',
     }    
 
 class BertEmbeddings(nn.Module):
@@ -660,10 +661,19 @@ class BertForPreTraining(nn.Module):
         return self.cls.predictions.decoder
 
 
-def bert(pretrained:bool = False, model_type:str = 'bert-base-uncased', checkpoint_path:str = './pretrained_flow'):
+def bert(pretrained:bool = False, model_type:str = 'bert-base-uncased', checkpoint_path:str = None):
     config = BertConfig()
     if pretrained == False:
         return BertModel(config)
+    if checkpoint_path != None:
+        cpt, config_path = load_state_dict_from_file(checkpoint_path)
+        config.load_from_json(config_path)
+        bert = BertModel(config)
+        try:
+            print(bert.load_state_dict(cpt))
+        except:
+            print('Checkpoint loading failed.')
+        return bert, config
     assert model_type in model_urls, "The model_type {} not identifiable, please confirm."
     cpt, config_file = load_state_dict_from_url(model_urls[model_type], checkpoint_path)
     config.load_from_json(config_file)
