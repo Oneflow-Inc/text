@@ -11,6 +11,7 @@ from oneflow.nn import CrossEntropyLoss
 
 model_urls = {
     'bert-base-uncased':'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-base-uncased-oneflow.tar.gz',
+    'bert-base-cased':'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-base-cased-oneflow.tar.gz',
     'bert-base-chinese':'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-base-chinese-oneflow.tar.gz',
     }    
 
