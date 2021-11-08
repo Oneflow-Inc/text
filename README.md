@@ -12,7 +12,7 @@ Models, Datasets, Metrics and Utils for NLP.
 
 - **Supported model and model type**
     
-    **bert** : {"bert-base-uncased", }
+    **bert** : {"bert-base-uncased", "bert-base-chinese"}
 
 - **Load the pretrained model**
     
