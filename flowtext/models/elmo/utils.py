@@ -3,9 +3,18 @@ from oneflow import Tensor
 import collections
 import random
 import logging
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
+import os
+import shutil
+import hashlib
+import tempfile
+import tarfile
+from tqdm import tqdm
 
 
-logger = logging.getLogger('elmoformanylangs')
+logger = logging.getLogger("elmoformanylangs")
+
 
 def recover(li, ind):
     dummy = list(range(len(ind)))
@@ -21,15 +30,24 @@ def get_lengths_from_binary_sequence_mask(mask: flow.Tensor):
 def sort_batch_by_length(tensor, sequence_lengths):
     if not isinstance(tensor, Tensor) or not isinstance(sequence_lengths, Tensor):
         raise Exception("Both the tensor and sequence length must be flow.Tensor.")
-    (sorted_sequence_lengths, permutation_index) = sequence_lengths.sort(0, descending=True)
+    (sorted_sequence_lengths, permutation_index) = sequence_lengths.sort(
+        0, descending=True
+    )
     sorted_tensor = tensor.index_select(0, permutation_index)
     sequence_lengths.data.copy_(flow.arange(0, sequence_lengths.size(0)))
     index_range = sequence_lengths.clone()
     index_range = flow.Tensor(index_range.long())
-    
+
     _, reverse_mapping = permutation_index.sort(0, descending=False)
     restoration_indices = index_range.index_select(0, reverse_mapping)
-    return sorted_tensor, sorted_sequence_lengths, restoration_indices, permutation_index
+    return (
+        sorted_tensor,
+        sorted_sequence_lengths,
+        restoration_indices,
+        permutation_index,
+    )
+
+
 # TODO: modify after the orthogonal supported.
 # def block_orthogonal(tensor: flow.Tensor, split_sizes: List[int], gain: float = 1.0) -> None:
 #     if isinstance(tensor, Tensor):
@@ -55,26 +73,27 @@ def get_dropout_mask(dropout_probability: float, tensor_for_masking: Tensor):
 
 
 def dict2namedtuple(dic):
-    return collections.namedtuple('Namespace', dic.keys())(**dic)
+    return collections.namedtuple("Namespace", dic.keys())(**dic)
 
 
 def read_list(sents, max_chars=None):
     dataset = []
     textset = []
     for sent in sents:
-        data = ['<bos>']
+        data = ["<bos>"]
         text = []
         for token in sent:
             text.append(token)
             if max_chars is not None and len(token) + 2 > max_chars:
-                token = token[:max_chars - 2]
+                token = token[: max_chars - 2]
             data.append(token)
-        data.append('<eos>')
+        data.append("<eos>")
         dataset.append(data)
         textset.append(text)
     return dataset, textset
 
-def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort=True):
+
+def create_one_batch(x, word2id, char2id, config, oov="<oov>", pad="<pad>", sort=True):
     batch_size = len(x)
     lst = list(range(batch_size))
     if sort:
@@ -93,21 +112,30 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
     else:
         batch_w = None
     if char2id is not None:
-        bow_id, eow_id, oov_id, pad_id = [char2id.get(key, None) for key in ('<eow>', '<bow>', oov, pad)]
-        assert bow_id is not None and eow_id is not None and oov_id is not None and pad_id is not None
-        if config['token_embedder']['name'].lower() == 'cnn':
-            max_chars = config['token_embedder']['max_characters_per_token']
+        bow_id, eow_id, oov_id, pad_id = [
+            char2id.get(key, None) for key in ("<eow>", "<bow>", oov, pad)
+        ]
+        assert (
+            bow_id is not None
+            and eow_id is not None
+            and oov_id is not None
+            and pad_id is not None
+        )
+        if config["token_embedder"]["name"].lower() == "cnn":
+            max_chars = config["token_embedder"]["max_characters_per_token"]
             assert max([len(w) for i in lst for w in x[i]]) + 2 <= max_chars
-        elif config['token_embedder']['name'].lower() == 'lstm':
+        elif config["token_embedder"]["name"].lower() == "lstm":
             max_chars = max([len(w) for i in lst for w in x[i]]) + 2
         else:
-            raise ValueError('Unknown token_embedder: {0}'.format(config['token_embedder']['name']))
-        
+            raise ValueError(
+                "Unknown token_embedder: {0}".format(config["token_embedder"]["name"])
+            )
+
         batch_c = flow.zeros(batch_size, max_len, max_chars).fill_(pad_id)
         for i, x_i in enumerate(x):
             for j, x_ij in enumerate(x_i):
                 batch_c[i, j, 0] = bow_id
-                if x_ij == '<bos>' or x_ij == '<eos>':
+                if x_ij == "<bos>" or x_ij == "<eos>":
                     batch_c[i, j, 1] = char2id.get(x_ij)
                     batch_c[i, j, 2] = eow_id
                 else:
@@ -127,14 +155,24 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
                 masks[2].append(i * max_len + j)
     assert len(masks[1]) <= batch_size * max_len
     assert len(masks[2]) <= batch_size * max_len
-    
+
     masks[0] = flow.Tensor(masks[0]).long()
     masks[1] = flow.Tensor(masks[1]).long()
     masks[2] = flow.Tensor(masks[2]).long()
     return batch_w, batch_c, lens, masks
-        
 
-def create_batches(x, batch_size, word2id, char2id, config, perm=None, shuffle=False, sort=True, text=None):
+
+def create_batches(
+    x,
+    batch_size,
+    word2id,
+    char2id,
+    config,
+    perm=None,
+    shuffle=False,
+    sort=True,
+    text=None,
+):
     ind = list(range(len(x)))
     lst = perm or list(range(len(x)))
     if shuffle:
@@ -149,20 +187,29 @@ def create_batches(x, batch_size, word2id, char2id, config, perm=None, shuffle=F
         text = [text[i] for i in lst]
 
     sum_len = 0.0
-    batches_w, batches_c, batches_lens, batches_masks, batches_text, batches_ind = [], [], [], [], [], []
+    batches_w, batches_c, batches_lens, batches_masks, batches_text, batches_ind = (
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
     size = batch_size
     nbatch = (len(x) - 1) // size + 1
     for i in range(nbatch):
         start_id, end_id = i * size, (i + 1) * size
-        bw, bc, blens, bmasks = create_one_batch(x[start_id: end_id], word2id, char2id, config, sort=sort)
+        bw, bc, blens, bmasks = create_one_batch(
+            x[start_id:end_id], word2id, char2id, config, sort=sort
+        )
         sum_len += sum(blens)
         batches_w.append(bw)
         batches_c.append(bc)
         batches_lens.append(blens)
         batches_masks.append(bmasks)
-        batches_ind.append(ind[start_id: end_id])
+        batches_ind.append(ind[start_id:end_id])
         if text is not None:
-            batches_text.append(text[start_id: end_id])
+            batches_text.append(text[start_id:end_id])
 
     if sort:
         perm = list(range(nbatch))
@@ -175,9 +222,84 @@ def create_batches(x, batch_size, word2id, char2id, config, perm=None, shuffle=F
         if text is not None:
             batches_text = [batches_text[i] for i in perm]
 
-    logger.info("{} batches, avg len: {:.1f}".format(
-        nbatch, sum_len / len(x)))
+    logger.info("{} batches, avg len: {:.1f}".format(nbatch, sum_len / len(x)))
     recover_ind = [item for sublist in batches_ind for item in sublist]
     if text is not None:
-        return batches_w, batches_c, batches_lens, batches_masks, batches_text, recover_ind
+        return (
+            batches_w,
+            batches_c,
+            batches_lens,
+            batches_masks,
+            batches_text,
+            recover_ind,
+        )
     return batches_w, batches_c, batches_lens, batches_masks, recover_ind
+
+
+def load_state_dict_from_url(url: str, saved_path: str):
+    if saved_path == None:
+        saved_path = "./pretrained_flow"
+    url_parse = urlparse(url)
+    if not os.path.exists(saved_path):
+        os.mkdir(saved_path)
+        package_name = url_parse.path.split("/")[-1]
+        package_path = os.path.join(saved_path, package_name)
+        download_url_to_file(url, package_path)
+        print(
+            "The pretrained-model file saved in '{}'".format(
+                os.path.abspath(saved_path)
+            )
+        )
+        with tarfile.open(package_path) as f:
+            f.extractall(saved_path)
+    file_name = url_parse.path.split("/")[-1].split(".")[0]
+    file_path = os.path.join(saved_path, file_name)
+    return file_path
+
+
+def download_url_to_file(url, dst, hash_prefix=None, progress=True):
+    file_size = None
+    req = Request(url)
+    u = urlopen(req)
+    meta = u.info()
+    if hasattr(meta, "getheaders"):
+        content_length = meta.getheaders("Content-Length")
+    else:
+        content_length = meta.get_all("Content-Length")
+    if content_length is not None and len(content_length) > 0:
+        file_size = int(content_length[0])
+    dst = os.path.expanduser(dst)
+    dst_dir = os.path.dirname(dst)
+    f = tempfile.NamedTemporaryFile(delete=False, dir=dst_dir)
+    try:
+        if hash_prefix is not None:
+            sha256 = hashlib.sha256()
+        with tqdm(
+            total=file_size,
+            disable=not progress,
+            unit="B",
+            unit_scale=True,
+            unit_divisor=1024,
+        ) as pbar:
+            while True:
+                buffer = u.read(8192)
+                if len(buffer) == 0:
+                    break
+                f.write(buffer)
+                if hash_prefix is not None:
+                    sha256.update(buffer)
+                pbar.update(len(buffer))
+        f.close()
+        if hash_prefix is not None:
+            digest = sha256.hexdigest()
+            if digest[: len(hash_prefix)] != hash_prefix:
+                raise RuntimeError(
+                    'invalid hash value (expected "{}", got "{}")'.format(
+                        hash_prefix, digest
+                    )
+                )
+        shutil.move(f.name, dst)
+    finally:
+        f.close()
+        if os.path.exists(f.name):
+            os.remove(f.name)
