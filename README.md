@@ -13,7 +13,9 @@ Models, Datasets, Metrics and Utils for NLP.
 - **Supported model and model type**
     
     **bert** : {"bert-base-cased", "bert-base-uncased", "bert-large-uncased", "bert-base-chinese"}
-
+    
+    **elmo** : {"elmo-simplified-chinese"}
+    
 - **Load the pretrained model**
     
 ```python
