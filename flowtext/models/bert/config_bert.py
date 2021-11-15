@@ -23,7 +23,7 @@ class BertConfig(object):
         is_decoder=False,
         add_cross_attention=False,
         output_attentions=False,
-        output_hidden_states=False
+        output_hidden_states=False,
     ):
         super().__init__()
         self.vocab_size = vocab_size
@@ -46,7 +46,7 @@ class BertConfig(object):
         self.output_hidden_states = output_hidden_states
 
     def load_from_json(self, config_path):
-        with open(config_path, 'r', encoding='utf8') as file:
+        with open(config_path, "r", encoding="utf8") as file:
             json_data = json.load(file)
             for k, v in json_data.items():
                 if hasattr(self, k):
