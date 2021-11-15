@@ -3,6 +3,14 @@ from oneflow import Tensor
 import collections
 import random
 import logging
+from urllib.parse import urlparse
+from urllib.request import Request,urlopen
+import os
+import shutil
+import hashlib
+import tempfile
+import tarfile
+from tqdm import tqdm
 
 
 logger = logging.getLogger('elmoformanylangs')
@@ -181,3 +189,68 @@ def create_batches(x, batch_size, word2id, char2id, config, perm=None, shuffle=F
     if text is not None:
         return batches_w, batches_c, batches_lens, batches_masks, batches_text, recover_ind
     return batches_w, batches_c, batches_lens, batches_masks, recover_ind
+
+
+def load_state_dict_from_url(url: str, saved_path: str):
+    if saved_path == None:
+        saved_path = './pretrained_flow'
+    url_parse = urlparse(url)
+    if not os.path.exists(saved_path):
+        os.mkdir(saved_path)
+        package_name = url_parse.path.split('/')[-1]
+        package_path = os.path.join(saved_path, package_name)
+        download_url_to_file(url, package_path)
+        print("The pretrained-model file saved in '{}'".format(os.path.abspath(saved_path)))
+        with tarfile.open(package_path) as f:
+            f.extractall(saved_path)
+    file_name = url_parse.path.split('/')[-1].split('.')[0]
+    file_path = os.path.join(saved_path, file_name)
+    return file_path
+
+
+def download_url_to_file(url, dst, hash_prefix=None, progress=True):
+    file_size = None
+    req = Request(url)
+    u = urlopen(req)
+    meta = u.info()
+    if hasattr(meta, "getheaders"):
+        content_length = meta.getheaders("Content-Length")
+    else:
+        content_length = meta.get_all("Content-Length")
+    if content_length is not None and len(content_length) > 0:
+        file_size = int(content_length[0])
+    dst = os.path.expanduser(dst)
+    dst_dir = os.path.dirname(dst)
+    f = tempfile.NamedTemporaryFile(delete=False, dir=dst_dir)
+    try:
+        if hash_prefix is not None:
+            sha256 = hashlib.sha256()
+        with tqdm(
+            total=file_size,
+            disable=not progress,
+            unit="B",
+            unit_scale=True,
+            unit_divisor=1024,
+        ) as pbar:
+            while True:
+                buffer = u.read(8192)
+                if len(buffer) == 0:
+                    break
+                f.write(buffer)
+                if hash_prefix is not None:
+                    sha256.update(buffer)
+                pbar.update(len(buffer))
+        f.close()
+        if hash_prefix is not None:
+            digest = sha256.hexdigest()
+            if digest[: len(hash_prefix)] != hash_prefix:
+                raise RuntimeError(
+                    'invalid hash value (expected "{}", got "{}")'.format(
+                        hash_prefix, digest
+                    )
+                )
+        shutil.move(f.name, dst)
+    finally:
+        f.close()
+        if os.path.exists(f.name):
+            os.remove(f.name)

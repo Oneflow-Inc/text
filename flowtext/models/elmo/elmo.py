@@ -1,7 +1,7 @@
 import oneflow as flow
 from oneflow import nn
 from .encoder import ElmobiLm, LstmbiLm
-from .utils import dict2namedtuple, read_list, recover, create_batches
+from .utils import dict2namedtuple, read_list, recover, create_batches, load_state_dict_from_url
 from .embed_layer import ConvTokenEmbedder, LstmTokenEmbedder, EmbeddingLayer
 import numpy as np
 import json
@@ -10,6 +10,11 @@ import os
 import logging
 
 logger = logging.getLogger('elmoformanylangs')
+
+
+model_urls = {
+    'elmo-simplified-chinese' : 'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/elmo/elmo-simplified-chinese.tar.gz',
+    }  
 
 
 class ElmoModel(nn.Module):
@@ -63,23 +68,10 @@ class Embedder(object):
 
     def get_model(self):
         self.use_cuda = flow.cuda.is_available()
-        args2 = dict2namedtuple(json.load(codecs.open(
-            os.path.join(self.model_dir, 'config.json'), 'r', encoding='utf-8')))
-
-        config_path = os.path.join(self.model_dir, args2.config_path)
-        if not os.path.exists(config_path):
-            config_path = os.path.join(self.model_dir,
-                                       os.path.split(config_path)[1])
-            logger.warning("Could not find config.  Trying " + config_path)
-        if not os.path.exists(config_path):
-            config_path = os.path.join(os.path.split(__file__)[0], "configs",
-                                       os.path.split(config_path)[1])
-            logger.warning("Could not find config.  Trying " + config_path)
-
+        config_path = os.path.join(self.model_dir, 'config.json')
         if not os.path.exists(config_path):
             raise FileNotFoundError("Could not find the model config in either the model directory "
-                                    "or the default configs.  Path in config file: %s" % args2.config_path)
-
+                                    "or the default configs.  Path in config file: {}".format(config_path))
         with open(config_path, 'r') as fin:
             config = json.load(fin)
 
@@ -168,3 +160,17 @@ class Embedder(object):
 
         after_elmo = recover(after_elmo, recover_ind)
         return after_elmo
+
+
+def elmo(model_type: str = 'elmo-simplified-chinese', checkpoint_path: str = None):
+    if checkpoint_path != None:
+        try:
+            Embedder(checkpoint_path)
+        except FileNotFoundError:
+            print('Load error, Start downloading')
+        embedder = Embedder(checkpoint_path)
+        return embedder.model, embedder.config
+    assert model_type in model_urls, "The model_type {} not identifiable, please confirm."
+    file = load_state_dict_from_url(model_urls[model_type], checkpoint_path)
+    embedder = Embedder(file)
+    return embedder.model, embedder.config
