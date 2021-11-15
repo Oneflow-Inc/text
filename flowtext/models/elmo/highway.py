@@ -1,6 +1,5 @@
-from typing import Callable
-
 import oneflow as flow
+from typing import Callable
 from overrides import overrides
 
 

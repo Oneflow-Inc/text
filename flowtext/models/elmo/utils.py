@@ -1,11 +1,9 @@
-from typing import List
-import itertools
-import collections
-import numpy as np
-import random
-import logging
 import oneflow as flow
 from oneflow import Tensor
+import collections
+import random
+import logging
+
 
 logger = logging.getLogger('elmoformanylangs')
 
@@ -87,12 +85,12 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
     if word2id is not None:
         oov_id, pad_id = word2id.get(oov, None), word2id.get(pad, None)
         assert oov_id is not None and pad_id is not None
-        batch_w = np.zeros((batch_size, max_len))
-        batch_w.fill(pad_id)
+        # batch_w = np.zeros((batch_size, max_len))
+        batch_w = flow.zeros(batch_size, max_len).fill_(pad_id)
         for i, x_i in enumerate(x):
             for j, x_ij in enumerate(x_i):
-                batch_w[i][j] = word2id.get(x_ij, oov_id)
-        batch_w = flow.Tensor(batch_w).long()
+                batch_w[i, j] = word2id.get(x_ij, oov_id)
+        batch_w = batch_w.long()
     else:
         batch_w = None
     if char2id is not None:
@@ -106,25 +104,25 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
         else:
             raise ValueError('Unknown token_embedder: {0}'.format(config['token_embedder']['name']))
         
-        batch_c = np.zeros((batch_size, max_len, max_chars))
-        batch_c.fill(pad_id)
+        # batch_c = np.zeros((batch_size, max_len, max_chars))
+        batch_c = flow.zeros(batch_size, max_len, max_chars).fill_(pad_id)
         for i, x_i in enumerate(x):
             for j, x_ij in enumerate(x_i):
-                batch_c[i][j][0] = bow_id
+                batch_c[i, j, 0] = bow_id
                 if x_ij == '<bos>' or x_ij == '<eos>':
-                    batch_c[i][j][1] = char2id.get(x_ij)
-                    batch_c[i][j][2] = eow_id
+                    batch_c[i, j, 1] = char2id.get(x_ij)
+                    batch_c[i, j, 2] = eow_id
                 else:
                     for k, c in enumerate(x_ij):
-                        batch_c[i][j][k + 1] = char2id.get(c, oov_id)
-                    batch_c[i][j][len(x_ij) + 1] = eow_id
-        batch_c = flow.Tensor(batch_c).long()
+                        batch_c[i, j, k + 1] = char2id.get(c, oov_id)
+                    batch_c[i, j, len(x_ij) + 1] = eow_id
+        batch_c = batch_c.long()
     else:
         batch_c = None
-    masks = [np.zeros((batch_size, max_len)), [], []]
+    masks = [flow.zeros(batch_size, max_len), [], []]
     for i, x_i in enumerate(x):
         for j in range(len(x_i)):
-            masks[0][i][j] = 1
+            masks[0][i, j] = 1
             if j + 1 < len(x_i):
                 masks[1].append(i * max_len + j)
             if j > 0:

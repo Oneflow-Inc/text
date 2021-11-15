@@ -1,6 +1,6 @@
-import math
 import oneflow as flow
 from .utils import get_dropout_mask
+import math
 from typing import Optional, List, Tuple
 
 
@@ -30,7 +30,7 @@ class LstmCellWithProjection(flow.nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-
+        # TODO: Modify after oneflow support.
         # block_orthogonal(self.input_linearity.weight.data, [self.cell_size, self.input_size])
         # block_orthogonal(self.state_linearity.weight.data, [self.cell_size, self.hidden_size])
         stdv = 1.0 / math.sqrt(self.hidden_size)

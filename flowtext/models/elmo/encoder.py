@@ -1,8 +1,9 @@
+import oneflow as flow
 from .encoder_base import _EncoderBase
 from .lstm_cell import LstmCellWithProjection
-import oneflow as flow
-from typing import Optional, Tuple
 from torch.nn.utils.rnn import PackedSequence, pad_packed_sequence
+from typing import Optional, Tuple
+
 
 class ElmobiLm(_EncoderBase):
     def __init__(self, config, use_cuda=False):
@@ -85,7 +86,7 @@ class ElmobiLm(_EncoderBase):
             stacked_sequence_output = flow.cat([stacked_sequence_output, zeros], 2)
         self._update_states(final_states, restoration_indices)
         return stacked_sequence_output.index_select(1, restoration_indices)
-            
+    # TODO: use pytorch instead, modify after oneflow support.
     def _lstm_forward(self, 
                       inputs: PackedSequence,
                       initial_state: Optional[Tuple[flow.Tensor, flow.Tensor]] = None) -> \
@@ -98,7 +99,7 @@ class ElmobiLm(_EncoderBase):
                                "initial states does not match the number of layers.")
         else:
             hidden_states = list(zip(initial_state[0].split(1, 0), initial_state[1].split(1, 0)))
-        
+        # TODO: use pytorch instead, modify after oneflow support.
         inputs, batch_lengths = pad_packed_sequence(inputs, batch_first=True)
         inputs, batch_lengths = flow.tensor(inputs.numpy()), flow.tensor(batch_lengths.numpy())
         if self.use_cuda:

@@ -1,12 +1,12 @@
 import oneflow as flow
 from oneflow import nn
+from .encoder import ElmobiLm, LstmbiLm
+from .utils import dict2namedtuple, read_list, recover, create_batches
+from .embed_layer import ConvTokenEmbedder, LstmTokenEmbedder, EmbeddingLayer
 import numpy as np
 import json
-from .utils import dict2namedtuple, read_list, recover, create_batches
 import codecs
 import os
-from .embed_layer import ConvTokenEmbedder, LstmTokenEmbedder, EmbeddingLayer
-from .encoder import ElmobiLm, LstmbiLm
 import logging
 
 logger = logging.getLogger('elmoformanylangs')

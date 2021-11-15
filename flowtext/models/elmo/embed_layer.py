@@ -1,9 +1,10 @@
-import logging
-from .highway import Highway
 import oneflow as flow
 from oneflow import nn
+from .highway import Highway
+import logging
 
 logger = logging.getLogger('elmoformanylangs')
+
 
 class EmbeddingLayer(nn.Module):
     def __init__(self, 

@@ -1,20 +1,21 @@
 import oneflow as flow
 from oneflow.nn import Module
+from .utils import get_lengths_from_binary_sequence_mask, sort_batch_by_length
 import torch
 from torch.nn.utils.rnn import pack_padded_sequence, PackedSequence
-
-from .utils import get_lengths_from_binary_sequence_mask, sort_batch_by_length
 from typing import Tuple, Optional, Callable, Union
+
 
 RnnState = Union[flow.Tensor, Tuple[flow.Tensor, flow.Tensor]]
 RnnStateStorage = Tuple[flow.Tensor, ...]
+
 
 class _EncoderBase(Module):
     def __init__(self, stateful: bool = False):
         super().__init__()
         self.stateful = stateful
         self._states: Optional[RnnStateStorage] = None
-        
+    # TODO: use pytorch instead, modify after oneflow support.
     def sort_and_run_forward(self,
                              module: Callable[[PackedSequence, Optional[RnnState]],
                                               Tuple[Union[PackedSequence, flow.Tensor], RnnState]],
@@ -25,6 +26,7 @@ class _EncoderBase(Module):
         num_valid = flow.sum(mask[:, 0]).int().item()
         sequence_lengths = get_lengths_from_binary_sequence_mask(mask)
         sorted_inputs, sorted_sequence_lengths, restoration_indices, sorting_indices = sort_batch_by_length(inputs, sequence_lengths)
+        # TODO: use pytorch instead, modify after oneflow support.
         packed_sequence_input = pack_padded_sequence(
                                                     torch.tensor(sorted_inputs[:num_valid, :, :].numpy()),
                                                     sorted_sequence_lengths[:num_valid].data.tolist(),
