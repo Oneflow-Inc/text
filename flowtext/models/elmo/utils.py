@@ -30,7 +30,7 @@ def sort_batch_by_length(tensor, sequence_lengths):
     _, reverse_mapping = permutation_index.sort(0, descending=False)
     restoration_indices = index_range.index_select(0, reverse_mapping)
     return sorted_tensor, sorted_sequence_lengths, restoration_indices, permutation_index
-
+# TODO: modify after the orthogonal supported.
 # def block_orthogonal(tensor: flow.Tensor, split_sizes: List[int], gain: float = 1.0) -> None:
 #     if isinstance(tensor, Tensor):
 #         sizes = list(tensor.size())
@@ -85,7 +85,6 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
     if word2id is not None:
         oov_id, pad_id = word2id.get(oov, None), word2id.get(pad, None)
         assert oov_id is not None and pad_id is not None
-        # batch_w = np.zeros((batch_size, max_len))
         batch_w = flow.zeros(batch_size, max_len).fill_(pad_id)
         for i, x_i in enumerate(x):
             for j, x_ij in enumerate(x_i):
@@ -104,7 +103,6 @@ def create_one_batch(x, word2id, char2id, config, oov='<oov>', pad='<pad>', sort
         else:
             raise ValueError('Unknown token_embedder: {0}'.format(config['token_embedder']['name']))
         
-        # batch_c = np.zeros((batch_size, max_len, max_chars))
         batch_c = flow.zeros(batch_size, max_len, max_chars).fill_(pad_id)
         for i, x_i in enumerate(x):
             for j, x_ij in enumerate(x_i):
