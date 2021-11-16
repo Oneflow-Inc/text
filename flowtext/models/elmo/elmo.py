@@ -14,6 +14,8 @@ logger = logging.getLogger('elmoformanylangs')
 
 model_urls = {
     'elmo-simplified-chinese' : 'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/elmo/elmo-simplified-chinese.tar.gz',
+    'elmo-traditional-chinese' : 'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/elmo/elmo-traditional-chinese.tar.gz',
+    'elmo-english' : 'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/elmo/elmo-english.tar.gz',
     }  
 
 

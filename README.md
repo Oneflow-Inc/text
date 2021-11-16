@@ -14,7 +14,7 @@ Models, Datasets, Metrics and Utils for NLP.
     
     **bert** : {"bert-base-cased", "bert-base-uncased", "bert-large-uncased", "bert-base-chinese"}
     
-    **elmo** : {"elmo-simplified-chinese"}
+    **elmo** : {"elmo-simplified-chinese", "elmo-traditional-chinese", "elmo-english"}
     
 - **Load the pretrained model**
     
@@ -28,8 +28,8 @@ from flowtext.models import BertConfig, BertModel
 config = BertConfig()
 bert = BertModel(config)
 ```
-    
-    
+
+
 </details>
 
 
