@@ -10,6 +10,7 @@ from flowtext.utils import (
     unicode_csv_reader,
 )
 import codecs
+
 try:
     import defusedxml.ElementTree as ET
 except ImportError:
@@ -22,39 +23,48 @@ for public consumption yet.
 
 def _clean_xml_file(f_xml):
     f_txt = os.path.splitext(f_xml)[0]
-    with codecs.open(f_txt, mode='w', encoding='utf-8') as fd_txt:
+    with codecs.open(f_txt, mode="w", encoding="utf-8") as fd_txt:
         root = ET.parse(f_xml).getroot()[0]
-        for doc in root.findall('doc'):
-            for e in doc.findall('seg'):
-                fd_txt.write(e.text.strip() + '\n')
+        for doc in root.findall("doc"):
+            for e in doc.findall("seg"):
+                fd_txt.write(e.text.strip() + "\n")
 
 
 def _clean_tags_file(f_orig):
     xml_tags = [
-        '<url', '<keywords', '<talkid', '<description', '<reviewer',
-        '<translator', '<title', '<speaker', '<doc', '</doc'
+        "<url",
+        "<keywords",
+        "<talkid",
+        "<description",
+        "<reviewer",
+        "<translator",
+        "<title",
+        "<speaker",
+        "<doc",
+        "</doc",
     ]
-    f_txt = f_orig.replace('.tags', '')
-    with codecs.open(f_txt, mode='w', encoding='utf-8') as fd_txt, \
-            io.open(f_orig, mode='r', encoding='utf-8') as fd_orig:
+    f_txt = f_orig.replace(".tags", "")
+    with codecs.open(f_txt, mode="w", encoding="utf-8") as fd_txt, io.open(
+        f_orig, mode="r", encoding="utf-8"
+    ) as fd_orig:
         for line in fd_orig:
             if not any(tag in line for tag in xml_tags):
                 # TODO: Fix utf-8 next line mark
                 #                fd_txt.write(l.strip() + '\n')
                 #                fd_txt.write(l.strip() + u"\u0085")
                 #                fd_txt.write(l.lstrip())
-                fd_txt.write(line.strip() + '\n')
+                fd_txt.write(line.strip() + "\n")
 
 
 def _create_data_from_json(data_path):
     with open(data_path) as json_file:
-        raw_json_data = json.load(json_file)['data']
+        raw_json_data = json.load(json_file)["data"]
         for layer1 in raw_json_data:
-            for layer2 in layer1['paragraphs']:
-                for layer3 in layer2['qas']:
-                    _context, _question = layer2['context'], layer3['question']
-                    _answers = [item['text'] for item in layer3['answers']]
-                    _answer_start = [item['answer_start'] for item in layer3['answers']]
+            for layer2 in layer1["paragraphs"]:
+                for layer3 in layer2["qas"]:
+                    _context, _question = layer2["context"], layer3["question"]
+                    _answers = [item["text"] for item in layer3["answers"]]
+                    _answer_start = [item["answer_start"] for item in layer3["answers"]]
                     if len(_answers) == 0:
                         _answers = [""]
                         _answer_start = [-1]
@@ -62,7 +72,7 @@ def _create_data_from_json(data_path):
                     yield (_context, _question, _answers, _answer_start)
 
 
-def _create_data_from_iob(data_path, separator='\t'):
+def _create_data_from_iob(data_path, separator="\t"):
     with open(data_path, encoding="utf-8") as input_file:
         columns = []
         for line in input_file:
@@ -90,7 +100,7 @@ def _create_data_from_csv(data_path):
     with io.open(data_path, encoding="utf8") as f:
         reader = unicode_csv_reader(f)
         for row in reader:
-            yield int(row[0]), ' '.join(row[1:])
+            yield int(row[0]), " ".join(row[1:])
 
 
 def _check_default_set(split, target_select, dataset_name):
@@ -104,8 +114,11 @@ def _check_default_set(split, target_select, dataset_name):
     if not isinstance(split, tuple):
         raise ValueError("Internal error: Expected split to be of type tuple.")
     if not set(split).issubset(set(target_select)):
-        raise TypeError('Given selection {} of splits is not supported for dataset {}. Please choose from {}.'.format(
-            split, dataset_name, target_select))
+        raise TypeError(
+            "Given selection {} of splits is not supported for dataset {}. Please choose from {}.".format(
+                split, dataset_name, target_select
+            )
+        )
     return split
 
 
@@ -135,11 +148,15 @@ def _download_extract(root, url, downloaded_file, extracted_file):
     downloaded_file = os.path.abspath(downloaded_file)
     extracted_file = os.path.abspath(extracted_file)
     if os.path.exists(extracted_file):
-        with open(os.path.join(root, extracted_file), 'rb') as f:
+        with open(os.path.join(root, extracted_file), "rb") as f:
             return extracted_file
     dataset_tar = download_from_url(url, path=os.path.join(root, downloaded_file))
     extracted_files = extract_archive(dataset_tar)
-    assert os.path.exists(extracted_file), "extracted_file [{}] was not found in the archive [{}]".format(extracted_file, extracted_files)
+    assert os.path.exists(
+        extracted_file
+    ), "extracted_file [{}] was not found in the archive [{}]".format(
+        extracted_file, extracted_files
+    )
 
     return extracted_file
 
@@ -151,13 +168,20 @@ def _dataset_docstring_header(fn, num_lines=None, num_classes=None):
     Assumes function signature of form (root='.data', split=<some tuple of strings>, **kwargs)
     """
     argspec = inspect.getfullargspec(fn)
-    if not (argspec.args[0] == "root" and
-            argspec.args[1] == "split"):
-        raise ValueError("Internal Error: Given function {} did not adhere to standard signature.".format(fn))
+    if not (argspec.args[0] == "root" and argspec.args[1] == "split"):
+        raise ValueError(
+            "Internal Error: Given function {} did not adhere to standard signature.".format(
+                fn
+            )
+        )
     default_split = argspec.defaults[1]
 
     if not (isinstance(default_split, tuple) or isinstance(default_split, str)):
-        raise ValueError("default_split type expected to be of string or tuple but got {}".format(type(default_split)))
+        raise ValueError(
+            "default_split type expected to be of string or tuple but got {}".format(
+                type(default_split)
+            )
+        )
 
     header_s = fn.__name__ + " dataset\n"
 
@@ -182,11 +206,13 @@ def _dataset_docstring_header(fn, num_lines=None, num_classes=None):
 
     if isinstance(default_split, tuple):
         args_s += "\n    split: split or splits to be returned. Can be a string or tuple of strings."
-        args_s += "\n        Default: {}""".format(str(default_split))
+        args_s += "\n        Default: {}" "".format(str(default_split))
 
     if isinstance(default_split, str):
         args_s += "\n     split: Only {default_split} is available."
-        args_s += "\n         Default: {default_split}.format(default_split=default_split)"
+        args_s += (
+            "\n         Default: {default_split}.format(default_split=default_split)"
+        )
 
     return "\n".join([header_s, args_s]) + "\n"
 
@@ -200,6 +226,7 @@ def _add_docstring_header(docstring=None, num_lines=None, num_classes=None):
         if old_doc is not None:
             fn.__doc__ += old_doc
         return fn
+
     return docstring_decorator
 
 
@@ -216,17 +243,22 @@ def _wrap_split_argument_with_fn(fn, splits):
     train, valid = AG_NEWS(split=('train', 'valid'))
     """
     argspec = inspect.getfullargspec(fn)
-    if not (argspec.args[0] == "root" and
-            argspec.args[1] == "split" and
-            argspec.varargs is None and
-            argspec.varkw is None and
-            len(argspec.kwonlyargs) == 0 and
-            len(argspec.annotations) == 0
-            ):
-        raise ValueError("Internal Error: Given function {} did not adhere to standard signature.".format(fn))
+    if not (
+        argspec.args[0] == "root"
+        and argspec.args[1] == "split"
+        and argspec.varargs is None
+        and argspec.varkw is None
+        and len(argspec.kwonlyargs) == 0
+        and len(argspec.annotations) == 0
+    ):
+        raise ValueError(
+            "Internal Error: Given function {} did not adhere to standard signature.".format(
+                fn
+            )
+        )
 
     @functools.wraps(fn)
-    def new_fn(root=os.path.expanduser('~/.flowtext/cache'), split=splits, **kwargs):
+    def new_fn(root=os.path.expanduser("~/.flowtext/cache"), split=splits, **kwargs):
         result = []
         for item in _check_default_set(split, splits, fn.__name__):
             result.append(fn(root, item, **kwargs))
@@ -235,8 +267,8 @@ def _wrap_split_argument_with_fn(fn, splits):
     new_sig = inspect.signature(new_fn)
     new_sig_params = new_sig.parameters
     new_params = []
-    new_params.append(new_sig_params['root'].replace(default='.data'))
-    new_params.append(new_sig_params['split'].replace(default=splits))
+    new_params.append(new_sig_params["root"].replace(default=".data"))
+    new_params.append(new_sig_params["split"].replace(default=splits))
     new_params += [entry[1] for entry in list(new_sig_params.items())[2:]]
     new_sig = new_sig.replace(parameters=tuple(new_params))
     new_fn.__signature__ = new_sig
@@ -247,23 +279,29 @@ def _wrap_split_argument_with_fn(fn, splits):
 def _wrap_split_argument(splits):
     def new_fn(fn):
         return _wrap_split_argument_with_fn(fn, splits)
+
     return new_fn
 
 
 def _create_dataset_directory(dataset_name):
     def decorator(func):
         argspec = inspect.getfullargspec(func)
-        if not (argspec.args[0] == "root" and
-                argspec.args[1] == "split" and
-                argspec.varargs is None and
-                argspec.varkw is None and
-                len(argspec.kwonlyargs) == 0 and
-                len(argspec.annotations) == 0
-                ):
-            raise ValueError("Internal Error: Given function {} did not adhere to standard signature.".format(func))
+        if not (
+            argspec.args[0] == "root"
+            and argspec.args[1] == "split"
+            and argspec.varargs is None
+            and argspec.varkw is None
+            and len(argspec.kwonlyargs) == 0
+            and len(argspec.annotations) == 0
+        ):
+            raise ValueError(
+                "Internal Error: Given function {} did not adhere to standard signature.".format(
+                    func
+                )
+            )
 
         @functools.wraps(func)
-        def wrapper(root=os.path.expanduser('~/.flowtext/cache'), *args, **kwargs):
+        def wrapper(root=os.path.expanduser("~/.flowtext/cache"), *args, **kwargs):
             new_root = os.path.join(root, dataset_name)
             if not os.path.exists(new_root):
                 os.makedirs(new_root)

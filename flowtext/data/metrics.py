@@ -29,8 +29,9 @@ def _compute_ngram_counter(tokens, max_n):
                     })
     """
     assert max_n > 0
-    ngrams_counter = collections.Counter(tuple(x.split(' '))
-                                         for x in ngrams_iterator(tokens, max_n))
+    ngrams_counter = collections.Counter(
+        tuple(x.split(" ")) for x in ngrams_iterator(tokens, max_n)
+    )
 
     return ngrams_counter
 
@@ -57,7 +58,9 @@ def bleu_score(candidate_corpus, references_corpus, max_n=4, weights=[0.25] * 4)
     """
 
     assert max_n == len(weights), 'Length of the "weights" list has be equal to max_n'
-    assert len(candidate_corpus) == len(references_corpus), 'The length of candidate and reference corpus should be the same'
+    assert len(candidate_corpus) == len(
+        references_corpus
+    ), "The length of candidate and reference corpus should be the same"
 
     clipped_counts = flow.zeros(max_n)
     total_counts = flow.zeros(max_n)
@@ -84,7 +87,7 @@ def bleu_score(candidate_corpus, references_corpus, max_n=4, weights=[0.25] * 4)
         for ngram in clipped_counter:
             clipped_counts[len(ngram) - 1] += clipped_counter[ngram]
 
-        for ngram in candidate_counter:  
+        for ngram in candidate_counter:
             total_counts[len(ngram) - 1] += candidate_counter[ngram]
 
     if min(clipped_counts) == 0:

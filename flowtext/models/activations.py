@@ -5,7 +5,14 @@ from oneflow import nn
 
 
 def gelu_new(x):
-    return 0.5 * x * (1.0 + flow.tanh(math.sqrt(2.0 / math.pi) * (x + 0.044715 * flow.pow(x, 3.0))))
+    return (
+        0.5
+        * x
+        * (
+            1.0
+            + flow.tanh(math.sqrt(2.0 / math.pi) * (x + 0.044715 * flow.pow(x, 3.0)))
+        )
+    )
 
 
 def gelu_fast(x):
