@@ -1,14 +1,14 @@
 import collections
 import unicodedata
 import os
-
+from typing import Union, List
 
 def load_vocab(vocab_file):
     vocab = collections.OrderedDict()
     with open(vocab_file, "r", encoding="utf-8") as reader:
         tokens = reader.readlines()
     for index, token in enumerate(tokens):
-        token = tokens.rstrip("\n")
+        token = token.rstrip("\n")
         vocab[token] = index
     return vocab
 
@@ -224,6 +224,17 @@ class BertTokenizer(object):
         strip_accents=None,
         **kwargs,
     ):
+        super().__init__()
+        self.vocab_file = vocab_file
+        self.never_split = never_split
+        self.unk_token = unk_token
+        self.sep_token = sep_token
+        self.pad_token = pad_token
+        self.cls_token = cls_token
+        self.mask_token = mask_token
+        self.tokenize_chinese_chars = tokenize_chinese_chars
+        self.strip_accents = strip_accents
+
         if not os.path.isfile(vocab_file):
             raise ValueError(f"Can't find a vocabulary file at path '{vocab_file}'.")
         self.vocab = load_vocab(vocab_file)
@@ -279,3 +290,13 @@ class BertTokenizer(object):
         """Converts a sequence of tokens (string) in a single string."""
         out_string = " ".join(tokens).replace(" ##", "").strip()
         return out_string
+
+    def convert_tokens_to_ids(self, tokens: Union[str, List[str]]) -> Union[int, List[int]]:
+        if tokens is None:
+            return None
+        if isinstance(tokens, str):
+            return self._convert_token_to_id(tokens)
+        ids = []
+        for token in tokens:
+            ids.append(self._convert_token_to_id(token))
+        return ids
