@@ -223,8 +223,8 @@ class BertTokenizer(object):
         mask_token="[MASK]",
         tokenize_chinese_chars=True,
         strip_accents=None,
-        **kwargs
-        ):
+        **kwargs,
+    ):
         super().__init__()
 
         self.do_basic_tokenize = do_basic_tokenize
@@ -236,7 +236,7 @@ class BertTokenizer(object):
         self.mask_token = mask_token
         self.tokenize_chinese_chars = tokenize_chinese_chars
         self.strip_accents = strip_accents
-        
+
         if not os.path.isfile(vocab_file):
             raise ValueError(f"Can't find a vocabulary file at path '{vocab_file}'.")
         self.vocab = load_vocab(vocab_file)
@@ -293,13 +293,15 @@ class BertTokenizer(object):
         out_string = " ".join(tokens).replace(" ##", "").strip()
         return out_string
 
-    def convert_tokens_to_ids(self, tokens: Union[str, List[str]]) -> Union[int, List[int]]:
+    def convert_tokens_to_ids(
+        self, tokens: Union[str, List[str]]
+    ) -> Union[int, List[int]]:
         if tokens is None:
             return None
-        
+
         if isinstance(tokens, str):
             return self._convert_token_to_id(tokens)
-        
+
         ids = []
         for token in tokens:
             ids.append(self._convert_token_to_id(token))

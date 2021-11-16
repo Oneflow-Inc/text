@@ -24,10 +24,10 @@ model_urls = {
 
 
 model_urls = {
-    'elmo-simplified-chinese' : 'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/elmo/elmo-simplified-chinese.tar.gz',
-    'elmo-traditional-chinese' : 'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/elmo/elmo-traditional-chinese.tar.gz',
-    'elmo-english' : 'http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/elmo/elmo-english.tar.gz',
-    }  
+    "elmo-simplified-chinese": "http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/elmo/elmo-simplified-chinese.tar.gz",
+    "elmo-traditional-chinese": "http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/elmo/elmo-traditional-chinese.tar.gz",
+    "elmo-english": "http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/elmo/elmo-english.tar.gz",
+}
 
 
 class ElmoModel(nn.Module):
@@ -211,7 +211,6 @@ class Embedder(object):
 
         after_elmo = recover(after_elmo, recover_ind)
         return after_elmo
-
 
 
 def elmo(model_type: str = "elmo-simplified-chinese", checkpoint_path: str = None):
