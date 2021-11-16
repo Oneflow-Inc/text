@@ -3,6 +3,7 @@ import unicodedata
 import os
 from typing import Union, List
 
+
 def load_vocab(vocab_file):
     vocab = collections.OrderedDict()
     with open(vocab_file, "r", encoding="utf-8") as reader:
@@ -291,7 +292,9 @@ class BertTokenizer(object):
         out_string = " ".join(tokens).replace(" ##", "").strip()
         return out_string
 
-    def convert_tokens_to_ids(self, tokens: Union[str, List[str]]) -> Union[int, List[int]]:
+    def convert_tokens_to_ids(
+        self, tokens: Union[str, List[str]]
+    ) -> Union[int, List[int]]:
         if tokens is None:
             return None
         if isinstance(tokens, str):
