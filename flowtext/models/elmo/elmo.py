@@ -15,7 +15,7 @@ import codecs
 import os
 import logging
 
-logger = logging.getLogger("elmoformanylangs")
+logger = logging.getLogger("elmo")
 
 
 model_urls = {
