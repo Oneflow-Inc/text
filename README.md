@@ -21,7 +21,7 @@ Models, Datasets, Metrics and Utils for NLP.
 ```python
 # Load the pretrained model.
 from flowtext.models import bert
-bert, bert_config = bert(pretrained=True, model_type=bert-base-uncased', checkpoint_path=None)
+bert, tokenizer, bert_config = bert(pretrained=True, model_type=bert-base-uncased', checkpoint_path=None)
 
 # In addition, you can also load normal models.
 from flowtext.models import BertConfig, BertModel
