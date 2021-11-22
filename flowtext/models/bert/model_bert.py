@@ -1,3 +1,6 @@
+import oneflow as flow
+from oneflow import nn
+from oneflow.nn import CrossEntropyLoss
 import math
 import os
 from flowtext.models.activations import ACT2FN
@@ -5,15 +8,12 @@ from flowtext.models.bert.config_bert import BertConfig
 from flowtext.models.bert.tokenization_bert import BertTokenizer
 from flowtext.models.utils import load_state_dict_from_url, load_state_dict_from_file
 
-import oneflow as flow
-from oneflow import nn
-from oneflow.nn import CrossEntropyLoss
-
 
 model_urls = {
     "bert-base-uncased": "http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-base-uncased-oneflow.tar.gz",
     "bert-base-cased": "http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-base-cased-oneflow.tar.gz",
     "bert-large-uncased": "http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-large-uncased-oneflow.tar.gz",
+    "bert-large-cased": "http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-large-cased-oneflow.tar.gz",
     "bert-base-chinese": "http://oneflow-public.oss-cn-beijing.aliyuncs.com/model_zoo/flowtext/bert/bert-base-chinese-oneflow.tar.gz",
 }
 
@@ -495,6 +495,7 @@ class BertModel(nn.Module):
         self.embeddings = BertEmbeddings(config)
         self.encoder = BertEncoder(config)
         self.pooler = BertPooler(config) if add_pooling_layer else None
+        self.have_prefix = False
 
     def get_input_embeddings(self):
         return self.embeddings.word_embeddings
@@ -693,6 +694,7 @@ class BertForPreTraining(nn.Module):
         self.config = config
         self.bert = BertModel(config)
         self.cls = BertPreTrainingHeads(config)
+        self.have_prefix = True
         self.init_weights()
 
     def forward(
@@ -771,10 +773,15 @@ class BertForPreTraining(nn.Module):
 class BertForSequenceClassification(nn.Module):
     def __init__(self, config):
         super().__init__()
+        self.config = config
         self.num_labels = config.num_labels
         self.bert = BertModel(config)
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.classifier = nn.Linear(config.hidden_size, self.config.num_labels)
+        classifier_dropout = (
+            config.classifier_dropout if config.classifier_dropout is not None else config.hidden_dropout_prob
+        )
+        self.dropout = nn.Dropout(classifier_dropout)
+        self.classifier = nn.Linear(config.hidden_size, config.num_labels)
+        self.have_prefix = True
         self.init_weights()
 
     def forward(
@@ -827,12 +834,8 @@ class BertForSequenceClassification(nn.Module):
         output = (logits,) + outputs[2:]
         return ((loss,) + output) if loss is not None else output
 
-
     def init_weights(self):
         self.apply(self._init_weights)
-        self.clone_weights(
-            self.get_output_embeddings(), self.bert.get_input_embeddings()
-        )
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
@@ -847,12 +850,27 @@ class BertForSequenceClassification(nn.Module):
             module.weight.data.fill_(1.0)
             module.bias.data.fill_(0.0)
 
-    def clone_weights(self, output_embeddings, input_embeddings):
-        output_embeddings.weight = input_embeddings.weight
 
-    def get_output_embeddings(self):
-        return self.cls.predictions.decoder
-        
+def load_states_from_checkpoint(model, checkpoint):
+    # TODO: Add weight loading prompt. such as: weights that failed to load, weights that did not load, and weights that need training.
+    have_prefix = model.have_prefix
+    load_dict = {}
+    if not have_prefix:
+        for n, _ in model.named_parameters():
+            load_dict[n] = checkpoint['bert.' + n]
+        load_dict['embeddings.position_ids'] = checkpoint['bert.embeddings.position_ids']
+    else:
+        for n, w in model.named_parameters():
+            if n in checkpoint.keys():
+                load_dict[n] = checkpoint[n]
+            else:
+                load_dict[n] = w.detach().cpu()
+        load_dict['bert.embeddings.position_ids'] = checkpoint['bert.embeddings.position_ids']
+        if isinstance(model, BertForPreTraining):
+            load_dict["cls.predictions.decoder.weight"] = checkpoint["cls.predictions.decoder.weight"]
+            load_dict["cls.predictions.decoder.bias"] = checkpoint["cls.predictions.decoder.bias"]
+    model.load_state_dict(load_dict)
+    return model
 
 
 def bert(
@@ -869,7 +887,7 @@ def bert(
         bert = BertModel(config)
         tokenizer = BertTokenizer(vocab_file)
         try:
-            print(bert.load_state_dict(cpt))
+            bert = load_states_from_checkpoint(bert, cpt)
         except:
             print("Checkpoint loading failed.")
         return bert, tokenizer, config
@@ -881,7 +899,7 @@ def bert(
     bert = BertModel(config)
     tokenizer = BertTokenizer(vocab_file)
     try:
-        bert.load_state_dict(cpt)
+        bert = load_states_from_checkpoint(bert, cpt)
     except:
         print("Checkpoint loading failed.")
     return bert, tokenizer, config

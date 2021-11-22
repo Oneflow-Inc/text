@@ -1,5 +1,5 @@
+import oneflow as flow
 import hashlib
-from json import load
 import os
 import tarfile
 from urllib.parse import urlparse
@@ -7,8 +7,6 @@ from urllib.request import Request, urlopen
 import tempfile
 import shutil
 from tqdm import tqdm
-
-import oneflow as flow
 
 
 def load_state_dict_from_url(url: str, saved_path: str):
