@@ -6,7 +6,7 @@ import os
 from flowtext.models.activations import ACT2FN
 from flowtext.models.bert.config_bert import BertConfig
 from flowtext.models.bert.tokenization_bert import BertTokenizer
-from flowtext.models.utils import load_state_dict_from_url, load_state_dict_from_file
+from flowtext.models.utils import load_state_dict_from_url, load_state_dict_from_file, BertType
 
 
 model_urls = {
@@ -877,14 +877,16 @@ def bert(
     pretrained: bool = True,
     model_type: str = "bert-base-uncased",
     checkpoint_path: str = None,
+    bert_type: object = BertModel
 ):
+    assert (bert_type in BertType), "The bert_type: {} not in {}.".format(bert_type, BertType)
     config = BertConfig()
     if pretrained == False:
-        return BertModel(config), None, config
+        return bert_type(config), None, config
     if checkpoint_path != None:
         cpt, config_file, vocab_file = load_state_dict_from_file(checkpoint_path)
         config.load_from_json(config_file)
-        bert = BertModel(config)
+        bert = bert_type(config)
         tokenizer = BertTokenizer(vocab_file)
         try:
             bert = load_states_from_checkpoint(bert, cpt)
@@ -893,10 +895,10 @@ def bert(
         return bert, tokenizer, config
     assert (
         model_type in model_urls
-    ), "The model_type {} not identifiable, please confirm."
+    ), "The model_type {} not identifiable, please confirm.".format(model_type)
     cpt, config_file, vocab_file = load_state_dict_from_url(model_urls[model_type], checkpoint_path)
     config.load_from_json(config_file)
-    bert = BertModel(config)
+    bert = bert_type(config)
     tokenizer = BertTokenizer(vocab_file)
     try:
         bert = load_states_from_checkpoint(bert, cpt)
