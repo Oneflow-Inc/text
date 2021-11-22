@@ -1,5 +1,5 @@
+import oneflow as flow
 import hashlib
-from json import load
 import os
 import tarfile
 from urllib.parse import urlparse
@@ -7,8 +7,6 @@ from urllib.request import Request, urlopen
 import tempfile
 import shutil
 from tqdm import tqdm
-
-import oneflow as flow
 
 
 def load_state_dict_from_url(url: str, saved_path: str):
@@ -32,9 +30,10 @@ def load_state_dict_from_url(url: str, saved_path: str):
             with tarfile.open(package_path) as f:
                 f.extractall(saved_path)
     cpt = get_cpt(file_path)
-    config_file = get_json(file_path)
+    config_file = os.path.join(file_path, "config.json")
+    vocab_file = os.path.join(file_path, "vocab.txt")
     assert os.path.isdir(cpt), "Checkpoint file error!"
-    return flow.load(cpt), config_file
+    return flow.load(cpt), config_file, vocab_file
 
 
 def download_url_to_file(url, dst, hash_prefix=None, progress=True):
@@ -87,9 +86,11 @@ def download_url_to_file(url, dst, hash_prefix=None, progress=True):
 
 def load_state_dict_from_file(checkpoint_path):
     cpt = get_cpt(checkpoint_path)
-    config_path = get_json(checkpoint_path)
+    print(checkpoint_path)
+    config_file = os.path.join(checkpoint_path, "config.json")
+    vocab_file = os.path.join(checkpoint_path, "vocab.txt")
     assert flow.load(cpt), "The checkpoint_path error."
-    return flow.load(cpt), config_path
+    return flow.load(cpt), config_file, vocab_file
 
 
 def get_cpt(file_path):
@@ -98,11 +99,3 @@ def get_cpt(file_path):
         cpt = os.path.join(file_path, f)
         if os.path.isdir(cpt):
             return cpt
-
-
-def get_json(file_path):
-    files = os.listdir(file_path)
-    for f in files:
-        if ".json" in f:
-            json_file = os.path.join(file_path, f)
-    return json_file

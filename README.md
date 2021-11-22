@@ -12,16 +12,16 @@ Models, Datasets, Metrics and Utils for NLP.
 
 - **Supported model and model type**
     
-    **bert** : {"bert-base-cased", "bert-base-uncased", "bert-large-uncased", "bert-base-chinese"}
+    **bert** : {"bert-base-cased", "bert-base-uncased", "bert-large-cased","bert-large-uncased", "bert-base-chinese"}
     
-    **elmo** : {"elmo-simplified-chinese"}
+    **elmo** : {"elmo-simplified-chinese", "elmo-traditional-chinese", "elmo-english"}
     
 - **Load the pretrained model**
     
 ```python
 # Load the pretrained model.
 from flowtext.models import bert
-bert, bert_config = bert(pretrained=True, model_type=bert-base-uncased', checkpoint_path=None)
+bert, tokenizer, bert_config = bert(pretrained=True, model_type=bert-base-uncased', checkpoint_path=None)
 
 # In addition, you can also load normal models.
 from flowtext.models import BertConfig, BertModel

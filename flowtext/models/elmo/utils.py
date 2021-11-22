@@ -13,7 +13,7 @@ import tarfile
 from tqdm import tqdm
 
 
-logger = logging.getLogger("elmoformanylangs")
+logger = logging.getLogger("elmo")
 
 
 def recover(li, ind):

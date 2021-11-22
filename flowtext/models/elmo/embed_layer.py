@@ -3,7 +3,7 @@ from oneflow import nn
 from .highway import Highway
 import logging
 
-logger = logging.getLogger("elmoformanylangs")
+logger = logging.getLogger("elmo")
 
 
 class EmbeddingLayer(nn.Module):

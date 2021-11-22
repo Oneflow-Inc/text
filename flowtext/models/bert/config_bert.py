@@ -22,8 +22,7 @@ class BertConfig(object):
         classifier_dropout=None,
         is_decoder=False,
         add_cross_attention=False,
-        output_attentions=False,
-        output_hidden_states=False,
+        **kwargs
     ):
         super().__init__()
         self.vocab_size = vocab_size
@@ -42,8 +41,10 @@ class BertConfig(object):
         self.classifier_dropout = classifier_dropout
         self.is_decoder = is_decoder
         self.add_cross_attention = add_cross_attention
-        self.output_attentions = output_attentions
-        self.output_hidden_states = output_hidden_states
+        self.num_labels = kwargs.pop("num_labels", 2)
+        self.output_attentions = kwargs.pop('output_attentions', False)
+        self.output_hidden_states = kwargs.pop('output_hidden_states', False)
+        self.problem_type = kwargs.pop("problem_type", None)
 
     def load_from_json(self, config_path):
         with open(config_path, "r", encoding="utf8") as file:
