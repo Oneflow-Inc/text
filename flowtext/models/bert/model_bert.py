@@ -1,12 +1,12 @@
+import math
+from ..activations import ACT2FN
+from .config_bert import BertConfig
+from .tokenization_bert import BertTokenizer
+from ..utils import load_state_dict_from_url, load_state_dict_from_file
+
 import oneflow as flow
 from oneflow import nn
 from oneflow.nn import CrossEntropyLoss
-import math
-import os
-from flowtext.models.activations import ACT2FN
-from flowtext.models.bert.config_bert import BertConfig
-from flowtext.models.bert.tokenization_bert import BertTokenizer
-from flowtext.models.utils import load_state_dict_from_url, load_state_dict_from_file, BertType
 
 
 model_urls = {
@@ -849,6 +849,9 @@ class BertForSequenceClassification(nn.Module):
         elif isinstance(module, nn.LayerNorm):
             module.weight.data.fill_(1.0)
             module.bias.data.fill_(0.0)
+
+
+BertType = [BertModel, BertForPreTraining, BertForSequenceClassification]
 
 
 def load_states_from_checkpoint(model, checkpoint):

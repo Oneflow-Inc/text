@@ -1,8 +1,9 @@
-import oneflow as flow
 from .encoder_base import _EncoderBase
 from .lstm_cell import LstmCellWithProjection
-from torch.nn.utils.rnn import PackedSequence, pad_packed_sequence
 from typing import Optional, Tuple
+
+from torch.nn.utils.rnn import PackedSequence, pad_packed_sequence
+import oneflow as flow
 
 
 class ElmobiLm(_EncoderBase):

@@ -1,5 +1,3 @@
-import oneflow as flow
-from oneflow import nn
 from .encoder import ElmobiLm, LstmbiLm
 from .utils import (
     dict2namedtuple,
@@ -9,11 +7,14 @@ from .utils import (
     load_state_dict_from_url,
 )
 from .embed_layer import ConvTokenEmbedder, LstmTokenEmbedder, EmbeddingLayer
-import numpy as np
 import json
 import codecs
 import os
 import logging
+
+import numpy as np
+import oneflow as flow
+from oneflow import nn
 
 logger = logging.getLogger("elmo")
 

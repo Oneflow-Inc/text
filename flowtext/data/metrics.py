@@ -1,8 +1,8 @@
 import math
 import collections
-import oneflow as flow
 from flowtext.data.utils import ngrams_iterator
 
+import oneflow as flow
 
 def _compute_ngram_counter(tokens, max_n):
     """ Create a Counter with a count of unique n-grams in the tokens list

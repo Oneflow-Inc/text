@@ -1,5 +1,3 @@
-import oneflow as flow
-from flowtext.models.bert import BertModel, BertForPreTraining, BertForSequenceClassification
 import hashlib
 import os
 import tarfile
@@ -9,8 +7,7 @@ import tempfile
 import shutil
 from tqdm import tqdm
 
-
-BertType = [BertModel, BertForPreTraining, BertForSequenceClassification]
+import oneflow as flow
 
 
 def load_state_dict_from_url(url: str, saved_path: str):

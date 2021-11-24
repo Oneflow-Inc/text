@@ -1,7 +1,8 @@
-import oneflow as flow
 from .utils import get_dropout_mask
 import math
 from typing import Optional, List, Tuple
+
+import oneflow as flow
 
 
 class LstmCellWithProjection(flow.nn.Module):

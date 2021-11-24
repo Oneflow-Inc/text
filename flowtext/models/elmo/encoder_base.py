@@ -1,10 +1,10 @@
-import oneflow as flow
-from oneflow.nn import Module
 from .utils import get_lengths_from_binary_sequence_mask, sort_batch_by_length
-import torch
-from torch.nn.utils.rnn import pack_padded_sequence, PackedSequence
 from typing import Tuple, Optional, Callable, Union
 
+import torch
+from torch.nn.utils.rnn import pack_padded_sequence, PackedSequence
+import oneflow as flow
+from oneflow.nn import Module
 
 RnnState = Union[flow.Tensor, Tuple[flow.Tensor, flow.Tensor]]
 RnnStateStorage = Tuple[flow.Tensor, ...]
