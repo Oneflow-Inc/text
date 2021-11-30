@@ -209,6 +209,127 @@ class WordpieceTokenizer(object):
         return output_tokens
 
 
+class Trie:
+    """
+    Trie in Python. Creates a Trie out of a list of words. The trie is used to split on `added_tokens` in one pass
+    Loose reference https://en.wikipedia.org/wiki/Trie
+    """
+    def __init__(self):
+        self.data = {}
+
+    def add(self, word: str):
+        """
+        Passes over every char (utf-8 char) on word and recursively adds it to the internal `data` trie representation.
+        The special key `""` is used to represent termination.
+
+        This function is idempotent, adding twice the same word will leave the trie unchanged
+
+        Example::
+
+            >>> trie = Trie()
+            >>> trie.add("Hello 友達")
+            >>> trie.data
+            {"H": {"e": {"l": {"l": {"o": {" ": {"友": {"達": {"": 1}}}}}}}}}
+            >>> trie.add("Hello")
+            >>> trie.data
+            {"H": {"e": {"l": {"l": {"o": {"": 1, " ": {"友": {"達": {"": 1}}}}}}}}}
+        """
+        if not word:
+            # Prevent empty string
+            return
+        ref = self.data
+        for char in word:
+            ref[char] = char in ref and ref[char] or {}
+            ref = ref[char]
+        ref[""] = 1
+
+    def split(self, text: str) -> List[str]:
+        """
+        Will look for the words added to the trie within `text`. Output is the original string splitted along the
+        boundaries of the words found.
+
+        This trie will match the longest possible word first !
+
+        Example::
+
+            >>> trie = Trie()
+            >>> trie.split("[CLS] This is a extra_id_100")
+            ["[CLS] This is a extra_id_100"]
+            >>> trie.add("[CLS]")
+            >>> trie.add("extra_id_1")
+            >>> trie.add("extra_id_100")
+            >>> trie.split("[CLS] This is a extra_id_100")
+            ["[CLS]", " This is a ", "extra_id_100"]
+        """
+        states = collections.OrderedDict()
+        offsets = [0]
+        skip = None
+        for current, current_char in enumerate(text):
+            if skip and current < skip:
+                continue
+            to_remove = set()
+            reset = False
+            for start, trie_pointer in states.items():
+                if "" in trie_pointer:
+                    for lookstart, looktrie_pointer in states.items():
+                        if lookstart > start:
+                            break
+                        elif lookstart < start:
+                            lookahead_index = current + 1
+                            end = current + 1
+                        else:
+                            lookahead_index = current
+                            end = current
+                        next_char = text[lookahead_index] if lookahead_index < len(text) else None
+                        while next_char in looktrie_pointer:
+                            looktrie_pointer = looktrie_pointer[next_char]
+                            lookahead_index += 1
+                            if "" in looktrie_pointer:
+                                start = lookstart
+                                end = lookahead_index
+                                skip = lookahead_index
+                            if lookahead_index == len(text):
+                                break
+                            next_char = text[lookahead_index]
+                    offsets.append(start)
+                    offsets.append(end)
+                    reset = True
+                    break
+                elif current_char in trie_pointer:
+                    trie_pointer = trie_pointer[current_char]
+                    states[start] = trie_pointer
+                else:
+                    to_remove.add(start)
+            if reset:
+                states = {}
+            else:
+                for start in to_remove:
+                    del states[start]
+            if current_char in self.data:
+                states[current] = self.data[current_char]
+        for start, trie_pointer in states.items():
+            if "" in trie_pointer:
+                end = len(text)
+                offsets.append(start)
+                offsets.append(end)
+                break
+
+        return self.cut_text(text, offsets)
+
+    def cut_text(self, text, offsets):
+        offsets.append(len(text))
+        tokens = []
+        start = 0
+        for end in offsets:
+            if start > end:
+                continue
+            elif start == end:
+                continue
+            tokens.append(text[start:end])
+            start = end
+        return tokens
+
+
 class BertTokenizer(object):
     def __init__(
         self,
@@ -227,6 +348,7 @@ class BertTokenizer(object):
     ):
         super().__init__()
         self.vocab_file = vocab_file
+        self.do_lower_case = do_lower_case
         self.never_split = never_split
         self.unk_token = unk_token
         self.sep_token = sep_token
@@ -235,6 +357,8 @@ class BertTokenizer(object):
         self.mask_token = mask_token
         self.tokenize_chinese_chars = tokenize_chinese_chars
         self.strip_accents = strip_accents
+        self.tokens_trie = Trie()
+        self.all_special_tokens = []
 
         if not os.path.isfile(vocab_file):
             raise ValueError(f"Can't find a vocabulary file at path '{vocab_file}'.")
@@ -254,9 +378,16 @@ class BertTokenizer(object):
             vocab=self.vocab, unk_token=self.unk_token
         )
 
-    @property
-    def do_lower_case(self):
-        return self.basic_tokenizer.do_lower_case
+    def tokenize(self, text):
+        if hasattr(self, "do_lower_case") and self.do_lower_case:
+            text = text.lower()
+        tokens = self.tokens_trie.split(text)
+        tokenized_text = []
+        for token in tokens:
+            if not token:
+                continue
+            tokenized_text.extend(self._tokenize(token))
+        return tokenized_text
 
     @property
     def vocab_size(self):

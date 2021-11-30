@@ -1,149 +1,258 @@
 import math
+from typing import Optional
 
-import oneflow as flow
 from oneflow.optim import Optimizer
-from oneflow.nn.utils import clip_grad_norm_
+from oneflow.optim.lr_scheduler import LambdaLR
 
 
-def warmup_cosine(x, warmup=0.002):
-    if x < warmup:
-        return x/warmup
-    return 0.5 * (1.0 + flow.cos(math.pi * x))
+def get_constant_schedule(optimizer: Optimizer, last_epoch: int = -1):
+    """
+    Create a schedule with a constant learning rate, using the learning rate set in optimizer.
+    Args:
+        optimizer (:class:`~oneflow.optim.Optimizer`):
+            The optimizer for which to schedule the learning rate.
+        last_step (:obj:`int`, `optional`, defaults to -1):
+            The index of the last step when resuming training.
+    Return:
+        :obj:`oneflow.optim.lr_scheduler.LambdaLR` with the appropriate schedule.
+    """
+    return LambdaLR(optimizer, lambda _: 1, last_epoch=last_epoch)
 
-def warmup_constant(x, warmup=0.002):
-    if x < warmup:
-        return x/warmup
-    return 1.0
 
-def warmup_linear(x, warmup=0.002):
-    if x < warmup:
-        return x/warmup
-    return 1.0 - x
+def get_constant_schedule_with_warmup(optimizer: Optimizer, num_warmup_steps: int, last_epoch: int = -1):
+    """
+    Create a schedule with a constant learning rate preceded by a warmup period during which the learning rate
+    increases linearly between 0 and the initial lr set in the optimizer.
 
-SCHEDULES = {
-    'warmup_cosine':warmup_cosine,
-    'warmup_constant':warmup_constant,
-    'warmup_linear':warmup_linear,
+    Args:
+        optimizer (:class:`~flow.optim.Optimizer`):
+            The optimizer for which to schedule the learning rate.
+        num_warmup_steps (:obj:`int`):
+            The number of steps for the warmup phase.
+        last_epoch (:obj:`int`, `optional`, defaults to -1):
+            The index of the last epoch when resuming training.
+
+    Return:
+        :obj:`flow.optim.lr_scheduler.LambdaLR` with the appropriate schedule.
+    """
+
+    def lr_lambda(current_step: int):
+        if current_step < num_warmup_steps:
+            return float(current_step) / float(max(1.0, num_warmup_steps))
+        return 1.0
+
+    return LambdaLR(optimizer, lr_lambda, last_epoch=last_epoch)
+
+
+def get_constant_schedule_with_warm_up(optimizer: Optimizer, num_warmup_steps: int, last_epoch: int = -1):
+    """
+    Create a schedule with a constant learning rate preceded by a warmup period during which the learning rate
+    increases linearly between 0 and the initial lr set in the optimizer.
+
+    Args:
+        optimizer (:class:`~flow.optim.Optimizer`):
+            The optimizer for which to schedule the learning rate.
+        num_warmup_steps (:obj:`int`):
+            The number of steps for the warmup phase.
+        last_epoch (:obj:`int`, `optional`, defaults to -1):
+            The index of the last epoch when resuming training.
+
+    Return:
+        :obj:`flow.optim.lr_scheduler.LambdaLR` with the appropriate schedule.
+    """
+    def lr_lambda(current_step: int):
+        if current_step < num_warmup_steps:
+            return float(current_step) / float(max(1.0, num_warmup_steps))
+        return 1.0
+    
+    return LambdaLR(optimizer, lr_lambda, last_epoch=last_epoch)
+
+
+def get_linear_schedule_with_warmup(optimizer: Optimizer,num_warmup_steps: int, num_training_steps: int, last_epoch: int = -1):
+    """
+    Create a schedule with a learning rate that decreases linearly from the initial lr set in the optimizer to 0, after
+    a warmup period during which it increases linearly from 0 to the initial lr set in the optimizer.
+
+    Args:
+        optimizer (:class:`~flow.optim.Optimizer`):
+            The optimizer for which to schedule the learning rate.
+        num_warmup_steps (:obj:`int`):
+            The number of steps for the warmup phase.
+        num_training_steps (:obj:`int`):
+            The total number of training steps.
+        last_epoch (:obj:`int`, `optional`, defaults to -1):
+            The index of the last epoch when resuming training.
+
+    Return:
+        :obj:`flow.optim.lr_scheduler.LambdaLR` with the appropriate schedule.
+    """
+    def lr_lambda(current_step: int):
+        if current_step < num_warmup_steps:
+            return float(current_step) / float(max(1, num_warmup_steps))
+        return max(
+            0.0, float(num_training_steps - current_step) / float(max(1, num_training_steps - num_warmup_steps))
+        )
+    return LambdaLR(optimizer, lr_lambda, last_epoch)
+
+
+def get_cosine_schedule_with_warmup(
+    optimizer: Optimizer, num_warmup_steps: int, num_training_steps: int, num_cycles: float = 0.5, last_epochs: int = -1):
+    """
+    Create a schedule with a learning rate that decreases following the values of the cosine function between the
+    initial lr set in the optimizer to 0, after a warmup period during which it increases linearly between 0 and the
+    initial lr set in the optimizer.
+
+    Args:
+        optimizer (:class:`~flow.optim.Optimizer`):
+            The optimizer for which to schedule the learning rate.
+        num_warmup_steps (:obj:`int`):
+            The number of steps for the warmup phase.
+        num_training_steps (:obj:`int`):
+            The total number of training steps.
+        num_cycles (:obj:`float`, `optional`, defaults to 0.5):
+            The number of waves in the cosine schedule (the defaults is to just decrease from the max value to 0
+            following a half-cosine).
+        last_epoch (:obj:`int`, `optional`, defaults to -1):
+            The index of the last epoch when resuming training.
+
+    Return:
+        :obj:`flow.optim.lr_scheduler.LambdaLR` with the appropriate schedule.
+    """
+    def lr_lambda(current_step):
+        if current_step < num_warmup_steps:
+            return float(current_step) / float(max(1, num_warmup_steps))
+        progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
+        return max(0.0, 0.5 * (1.0 + math.cos(math.pi * float(num_cycles) * 2.0 * progress)))
+    return LambdaLR(optimizer, lr_lambda, last_epochs)
+
+
+def get_cosine_with_hard_restarts_schedule_with_warmup(
+    optimizer: Optimizer, num_warmup_steps: int, num_training_steps: int, num_cycles: int = 1, last_epoch: int = -1):
+    """
+    Create a schedule with a learning rate that decreases following the values of the cosine function between the
+    initial lr set in the optimizer to 0, with several hard restarts, after a warmup period during which it increases
+    linearly between 0 and the initial lr set in the optimizer.
+
+    Args:
+        optimizer (:class:`~flow.optim.Optimizer`):
+            The optimizer for which to schedule the learning rate.
+        num_warmup_steps (:obj:`int`):
+            The number of steps for the warmup phase.
+        num_training_steps (:obj:`int`):
+            The total number of training steps.
+        num_cycles (:obj:`int`, `optional`, defaults to 1):
+            The number of hard restarts to use.
+        last_epoch (:obj:`int`, `optional`, defaults to -1):
+            The index of the last epoch when resuming training.
+
+    Return:
+        :obj:`flow.optim.lr_scheduler.LambdaLR` with the appropriate schedule.
+    """
+
+    def lr_lambda(current_step):
+        if current_step < num_warmup_steps:
+            return float(current_step) / float(max(1, num_warmup_steps))
+        progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
+        if progress >= 1.0:
+            return 0.0
+        return max(0.0, 0.5 * (1.0 + math.cos(math.pi * ((float(num_cycles) * progress) % 1.0))))
+
+    return LambdaLR(optimizer, lr_lambda, last_epoch)
+
+
+def get_polynomial_decay_schedule_with_warmup(
+    optimizer, num_warmup_steps, num_training_steps, lr_end=1e-7, power=1.0, last_epoch=-1):
+    """
+    Create a schedule with a learning rate that decreases as a polynomial decay from the initial lr set in the
+    optimizer to end lr defined by `lr_end`, after a warmup period during which it increases linearly from 0 to the
+    initial lr set in the optimizer.
+
+    Args:
+        optimizer (:class:`~flow.optim.Optimizer`):
+            The optimizer for which to schedule the learning rate.
+        num_warmup_steps (:obj:`int`):
+            The number of steps for the warmup phase.
+        num_training_steps (:obj:`int`):
+            The total number of training steps.
+        lr_end (:obj:`float`, `optional`, defaults to 1e-7):
+            The end LR.
+        power (:obj:`float`, `optional`, defaults to 1.0):
+            Power factor.
+        last_epoch (:obj:`int`, `optional`, defaults to -1):
+            The index of the last epoch when resuming training.
+
+    Note: `power` defaults to 1.0 as in the fairseq implementation, which in turn is based on the original BERT
+    implementation at
+    https://github.com/google-research/bert/blob/f39e881b169b9d53bea03d2d341b31707a6c052b/optimization.py#L37
+
+    Return:
+        :obj:`flow.optim.lr_scheduler.LambdaLR` with the appropriate schedule.
+
+    """
+
+    lr_init = optimizer.defaults["lr"]
+    if not (lr_init > lr_end):
+        raise ValueError(f"lr_end ({lr_end}) must be be smaller than initial lr ({lr_init})")
+
+    def lr_lambda(current_step: int):
+        if current_step < num_warmup_steps:
+            return float(current_step) / float(max(1, num_warmup_steps))
+        elif current_step > num_training_steps:
+            return lr_end / lr_init  # as LambdaLR multiplies by lr_init
+        else:
+            lr_range = lr_init - lr_end
+            decay_steps = num_training_steps - num_warmup_steps
+            pct_remaining = 1 - (current_step - num_warmup_steps) / decay_steps
+            decay = lr_range * pct_remaining ** power + lr_end
+            return decay / lr_init  # as LambdaLR multiplies by lr_init
+
+    return LambdaLR(optimizer, lr_lambda, last_epoch)
+
+
+name2func = {
+    "linear": get_linear_schedule_with_warmup,
+    "cosine": get_cosine_schedule_with_warmup,
+    "cosine_with_restarts": get_cosine_with_hard_restarts_schedule_with_warmup,
+    "polynomial": get_polynomial_decay_schedule_with_warmup,
+    "constant": get_constant_schedule,
+    "constant_with_warmup": get_constant_schedule_with_warmup
 }
 
 
-class BertAdam(Optimizer):
-    """Implements BERT version of Adam algorithm with weight decay fix.
-    Params:
-        lr: learning rate
-        warmup: portion of t_total for the warmup, -1  means no warmup. Default: -1
-        t_total: total number of training steps for the learning
-            rate schedule, -1  means constant learning rate. Default: -1
-        schedule: schedule to use for the warmup (see above). Default: 'warmup_linear'
-        b1: Adams b1. Default: 0.9
-        b2: Adams b2. Default: 0.999
-        e: Adams epsilon. Default: 1e-6
-        weight_decay_rate: Weight decay. Default: 0.01
-        max_grad_norm: Maximum norm for the gradients (-1 means no clipping). Default: 1.0
+def get_schedule(
+    name: str,
+    optimizer: Optimizer,
+    num_warmup_steps: Optional[int] = None,
+    num_training_steps: Optional[int] = None,
+):
     """
-    def __init__(self, params, lr, warmup=-1, t_total=-1, schedule="warmup_linear",
-                 b1=0.9, b2=0.999, e=1e-6, weight_decay_rate=0.01, max_grad_norm=1.0):
-        if not lr >= 0.0:
-            raise ValueError("Invalid learning rate:{} - should be >= 0.0".format(lr))
-        if schedule not in SCHEDULES:
-            raise ValueError("Invalid schedule parameters:{}".format(schedule))
-        if not 0.0 <= warmup < 1.0 and not warmup == -1:
-            raise ValueError("Invalid warmup: {} - should be in [0.0, 1.0[ or -1".format(warmup))
-        if not 0.0 <= b1 < 1.0:
-            raise ValueError("Invalid b1 parameter: {} - should be in [0.0, 1.0[".format(b1))
-        if not 0.0 <= b2 < 1.0:
-            raise ValueError("Invalid b2 parameter: {} - should be in [0.0, 1.0[".format(b2))
-        if not e >= 0.0:
-            raise ValueError("Invalid epsilon value: {} - should be >= 0.0".format(e))
-        defaults = dict(lr=lr, schedule=schedule, warmup=warmup, t_total=t_total,
-                       b1=b1, b2=b2, e=e, weight_decay_rate=weight_decay_rate,
-                       max_grad_norm=max_grad_norm)
-        
-        super(BertAdam, self).__init__(params, defaults)
+    Unified API to get any scheduler from its name.
+
+    Args:
+        name (:obj:`str`):
+            The name of the scheduler to use, such as: 'linear', 'cosine', 'cosine_with_restarts', 'polynomial', 
+            'constant', 'constant_with_warmup'.
+        optimizer (:obj:`flow.optim.Optimizer`):
+            The optimizer that will be used during training.
+        num_warmup_steps (:obj:`int`, `optional`):
+            The number of warmup steps to do. This is not required by all schedulers (hence the argument being
+            optional), the function will raise an error if it's unset and the scheduler type requires it.
+        num_training_steps (:obj:`int`, `optional`):
+            The number of training steps to do. This is not required by all schedulers (hence the argument being
+            optional), the function will raise an error if it's unset and the scheduler type requires it.
+    """
+    assert name.lower() in name2func, "{} not in ['linear', 'cosine', 'cosine_with_restarts', 'polynomial', 'constant', 'constant_with_warmup']".format(name)
+    schedule_func = name2func[name.lower()]
+    if name == 'constant':
+        return schedule_func(optimizer)
+
+    if num_warmup_steps is None:
+        raise ValueError(f"{name} requires `num_warmup_steps`, please provide that argument.")
     
-    def get_lr(self):
-        lr = []
-        for group in self.param_groups:
-            for p in group['params']:
-                state = self.state[p]
-                if len(state) == 0:
-                    return [0]
-                if group['t_total'] != -1:
-                    schedule_fct = SCHEDULES[group['schedule']]
-                    lr_scheduled = group['lr'] * schedule_fct(state['step']/group['t_total'], group['warmup'])
-                else:
-                    lr_scheduled = group['lr']
-                lr.append(lr_scheduled)
-        return lr
+    if name == 'constant_with_warmup':
+        return schedule_func(optimizer, num_warmup_steps=num_warmup_steps)
+    
+    if num_training_steps is None:
+        raise ValueError(f"{name} requires `num_training_steps`, please provide that argument.")
 
-    def step(self, closure=None):
-        """Performs a single optimization step.
-
-        Arguments:
-            closure (callable, optional): A closure that reevaluates the model
-                and returns the loss.
-        """
-        loss = None
-        if closure is not None:
-            loss = closure()
-
-        for group in self.param_groups:
-            for p in group['params']:
-                if p.grad is None:
-                    continue
-                grad = p.grad.data
-                if grad.is_sparse:
-                    raise RuntimeError('Adam does not support sparse gradients, please consider SparseAdam instead')
-
-                state = self.state[p]
-
-                # State initialization
-                if len(state) == 0:
-                    state['step'] = 0
-                    # Exponential moving average of gradient values
-                    state['next_m'] = flow.zeros_like(p.data)
-                    # Exponential moving average of squared gradient values
-                    state['next_v'] = flow.zeros_like(p.data)
-
-                # next_m, next_v = state['next_m'], state['next_v']
-                beta1, beta2 = group['b1'], group['b2']
-
-                # Add grad clipping
-                if group['max_grad_norm'] > 0:
-                    clip_grad_norm_(p, group['max_grad_norm'])
-                # Decay the first and second moment running average coefficient
-                # In-place operations to update the averages at the same time
-                state['next_m'] = state['next_m'].mul(beta1).add((1 - beta1) * grad)
-                # next_m.mul_(beta1).add_(1 - beta1, grad)
-                state['next_v'] = state['next_v'].mul(beta2) + (1 - beta1) * grad * grad
-                # next_v.mul_(beta2).addcmul_(1 - beta2, grad, grad)
-                
-                update = state['next_m'] / (state['next_v'].sqrt() + group['e'])
-
-                # Just adding the square of the weights to the loss function is *not*
-                # the correct way of using L2 regularization/weight decay with Adam,
-                # since that will interact with the m and v parameters in strange ways.
-                #
-                # Instead we want to decay the weights in a manner that doesn't interact
-                # with the m/v parameters. This is equivalent to adding the square
-                # of the weights to the loss with plain (non-momentum) SGD.
-                if group['weight_decay_rate'] > 0.0:
-                    update += group['weight_decay_rate'] * p.data
-
-                if group['t_total'] != -1:
-                    schedule_fct = SCHEDULES[group['schedule']]
-                    lr_scheduled = group['lr'] * schedule_fct(state['step']/group['t_total'], group['warmup'])
-                else:
-                    lr_scheduled = group['lr']
-
-                update_with_lr = lr_scheduled * update
-                p.data.add_(-update_with_lr)
-
-                state['step'] += 1
-
-                # step_size = lr_scheduled * math.sqrt(bias_correction2) / bias_correction1
-                # No bias correction
-                # bias_correction1 = 1 - beta1 ** state['step']
-                # bias_correction2 = 1 - beta2 ** state['step']
-
-        return loss
+    return schedule_func(optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_training_steps)

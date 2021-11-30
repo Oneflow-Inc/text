@@ -812,7 +812,7 @@ class BertForSequenceClassification(nn.Module):
 
         loss = None
         if labels is not None:
-            if self.problem_type is None:
+            if self.config.problem_type is None:
                 if self.num_labels == 1:
                     self.config.problem_type = "regression"
                 elif self.num_labels > 1 and (labels.dtype == flow.long or labels.dtype == flow.int):
@@ -882,7 +882,7 @@ def bert(
     checkpoint_path: str = None,
     bert_type: object = BertModel
 ):
-    assert (bert_type in BertType), "The bert_type: {} not in {}.".format(bert_type, BertType)
+    assert (bert_type in BertType), f"The bert_type: {bert_type} not in {BertType}."
     config = BertConfig()
     if pretrained == False:
         return bert_type(config), None, config
@@ -898,7 +898,7 @@ def bert(
         return bert, tokenizer, config
     assert (
         model_type in model_urls
-    ), "The model_type {} not identifiable, please confirm.".format(model_type)
+    ), f"The model_type {model_type} not identifiable, please confirm."
     cpt, config_file, vocab_file = load_state_dict_from_url(model_urls[model_type], checkpoint_path)
     config.load_from_json(config_file)
     bert = bert_type(config)
