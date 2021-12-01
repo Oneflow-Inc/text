@@ -1,6 +1,7 @@
-import oneflow as flow
 from typing import Callable
 from overrides import overrides
+
+import oneflow as flow
 
 
 class Highway(flow.nn.Module):

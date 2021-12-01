@@ -1,7 +1,8 @@
-import oneflow as flow
-from oneflow import nn
 from .highway import Highway
 import logging
+
+import oneflow as flow
+from oneflow import nn
 
 logger = logging.getLogger("elmo")
 

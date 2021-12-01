@@ -1,5 +1,5 @@
-from flowtext.utils import download_from_url, extract_archive
-from flowtext.data.datasets_utils import (
+from ..utils import download_from_url, extract_archive
+from ..data.datasets_utils import (
     _RawTextIterableDataset,
     _wrap_split_argument,
     _add_docstring_header,

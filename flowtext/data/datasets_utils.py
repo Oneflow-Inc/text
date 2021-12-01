@@ -3,7 +3,6 @@ import inspect
 import os
 import io
 import json
-import oneflow as flow
 from flowtext.utils import (
     download_from_url,
     extract_archive,
@@ -11,15 +10,17 @@ from flowtext.utils import (
 )
 import codecs
 
+import oneflow as flow
+
 try:
     import defusedxml.ElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
+
 """
 These functions and classes are meant solely for use in flowtext.datasets and not
 for public consumption yet.
 """
-
 
 def _clean_xml_file(f_xml):
     f_txt = os.path.splitext(f_xml)[0]

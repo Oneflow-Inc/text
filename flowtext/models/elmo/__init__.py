@@ -1,1 +1,1 @@
-from flowtext.models.elmo.elmo import Embedder, elmo
+from .elmo import Embedder, elmo

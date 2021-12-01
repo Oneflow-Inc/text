@@ -1,5 +1,5 @@
 import os
-from flowtext.data.datasets_utils import (
+from ..data.datasets_utils import (
     _download_extract,
     _RawTextIterableDataset,
     _wrap_split_argument,

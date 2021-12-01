@@ -1,12 +1,12 @@
+import math
+from ..activations import ACT2FN
+from .config_bert import BertConfig
+from .tokenization_bert import BertTokenizer
+from ..utils import load_state_dict_from_url, load_state_dict_from_file
+
 import oneflow as flow
 from oneflow import nn
 from oneflow.nn import CrossEntropyLoss
-import math
-import os
-from flowtext.models.activations import ACT2FN
-from flowtext.models.bert.config_bert import BertConfig
-from flowtext.models.bert.tokenization_bert import BertTokenizer
-from flowtext.models.utils import load_state_dict_from_url, load_state_dict_from_file
 
 
 model_urls = {
@@ -812,7 +812,7 @@ class BertForSequenceClassification(nn.Module):
 
         loss = None
         if labels is not None:
-            if self.problem_type is None:
+            if self.config.problem_type is None:
                 if self.num_labels == 1:
                     self.config.problem_type = "regression"
                 elif self.num_labels > 1 and (labels.dtype == flow.long or labels.dtype == flow.int):
@@ -851,6 +851,9 @@ class BertForSequenceClassification(nn.Module):
             module.bias.data.fill_(0.0)
 
 
+BertType = [BertModel, BertForPreTraining, BertForSequenceClassification]
+
+
 def load_states_from_checkpoint(model, checkpoint):
     # TODO: Add weight loading prompt. such as: weights that failed to load, weights that did not load, and weights that need training.
     have_prefix = model.have_prefix
@@ -877,14 +880,16 @@ def bert(
     pretrained: bool = True,
     model_type: str = "bert-base-uncased",
     checkpoint_path: str = None,
+    bert_type: object = BertModel
 ):
+    assert (bert_type in BertType), f"The bert_type: {bert_type} not in {BertType}."
     config = BertConfig()
     if pretrained == False:
-        return BertModel(config), None, config
+        return bert_type(config), None, config
     if checkpoint_path != None:
         cpt, config_file, vocab_file = load_state_dict_from_file(checkpoint_path)
         config.load_from_json(config_file)
-        bert = BertModel(config)
+        bert = bert_type(config)
         tokenizer = BertTokenizer(vocab_file)
         try:
             bert = load_states_from_checkpoint(bert, cpt)
@@ -893,10 +898,10 @@ def bert(
         return bert, tokenizer, config
     assert (
         model_type in model_urls
-    ), "The model_type {} not identifiable, please confirm."
+    ), f"The model_type {model_type} not identifiable, please confirm."
     cpt, config_file, vocab_file = load_state_dict_from_url(model_urls[model_type], checkpoint_path)
     config.load_from_json(config_file)
-    bert = BertModel(config)
+    bert = bert_type(config)
     tokenizer = BertTokenizer(vocab_file)
     try:
         bert = load_states_from_checkpoint(bert, cpt)

@@ -1,5 +1,3 @@
-import oneflow as flow
-from oneflow import Tensor
 import collections
 import random
 import logging
@@ -12,6 +10,8 @@ import tempfile
 import tarfile
 from tqdm import tqdm
 
+import oneflow as flow
+from oneflow import Tensor
 
 logger = logging.getLogger("elmo")
 
