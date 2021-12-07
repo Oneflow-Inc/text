@@ -33,7 +33,7 @@ class BertEmbeddings(nn.Module):
         self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.register_buffer(
-            "position_ids", flow.arange(config.max_position_embeddings).expand((1, -1))
+            "position_ids", flow.arange(config.max_position_embeddings).expand(1, -1)
         )
         self.register_buffer(
             "token_type_ids",
