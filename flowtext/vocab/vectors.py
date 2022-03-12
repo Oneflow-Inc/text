@@ -200,4 +200,18 @@ class Vectors(object):
 
         vecs = flow.stack(indices)
         return vecs[0] if to_reduce else vecs
-        
+
+
+class GloVe(Vectors):
+    url = {
+        "42B": "http://nlp.stanford.edu/data/glove.42B.300d.zip",
+        "840B": "http://nlp.stanford.edu/data/glove.840B.300d.zip",
+        "twitter.27B": "http://nlp.stanford.edu/data/glove.twitter.27B.zip",
+        "6B": "http://nlp.stanford.edu/data/glove.6B.zip",
+    }
+
+    def __init__(self, name="840B", dim=300, **kwargs):
+        url = self.url[name]
+        name = "glove.{}.{}d.txt".format(name, str(dim))
+        super(GloVe, self).__init__(name, url=url, **kwargs)
+
