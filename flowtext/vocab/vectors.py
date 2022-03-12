@@ -224,3 +224,30 @@ class FastText(Vectors):
         name = os.path.basename(url)
         super(FastText, self).__init__(name, url=url, **kwargs)
 
+
+class CharNGram(Vectors):
+    name = "charNgram.txt"
+    url = "http://www.logos.t.u-tokyo.ac.jp/~hassy/publications/arxiv2016jmt/" "jmt_pre-trained_embeddings.tar.gz"
+
+    def __init__(self, **kwargs):
+        super(CharNGram, self).__init__(self.name, url=self.url, **kwargs)
+    
+    def __getitem__(self, token):
+        vector = flow.zeros(1, self.dim)
+        if token == "<unk>":
+            return self.unk_init(vector)
+        chars = ["#BEGIN#"] + list(token) + ["#END#"]
+        num_vectors = 0
+        for n in [2, 3, 4]:
+            end = len(chars) - n + 1
+            grams = [chars[i : (i + n)] for i in range(end)]
+            for gram in grams:
+                gram_key = "{}gram-{}".format(n, "".join(gram))
+                if gram_key in self.stoi:
+                    vector += self.vectors[self.stoi[gram_key]]
+                    num_vectors += 1
+        if num_vectors > 0:
+            vector /= num_vectors
+        else:
+            vector = self.unk_init(vector)
+        return vector
