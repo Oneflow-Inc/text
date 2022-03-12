@@ -215,3 +215,12 @@ class GloVe(Vectors):
         name = "glove.{}.{}d.txt".format(name, str(dim))
         super(GloVe, self).__init__(name, url=url, **kwargs)
 
+
+class FastText(Vectors):
+    url_base = "https://dl.fbaipublicfiles.com/fasttext/vectors-wiki/wiki.{}.vec"
+
+    def __init__(self, language="en", **kwargs):
+        url = self.url_base.format(language)
+        name = os.path.basename(url)
+        super(FastText, self).__init__(name, url=url, **kwargs)
+
