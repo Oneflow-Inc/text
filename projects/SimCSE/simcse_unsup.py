@@ -1,5 +1,6 @@
 import sys, os
-sys.path.append('/home/xiezipeng/text')
+path = '/'.join(os.getcwd().split('/')[:-2])
+sys.path.append(path)
 
 import random
 import time
