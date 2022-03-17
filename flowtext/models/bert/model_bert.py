@@ -370,7 +370,6 @@ class BertEncoder(nn.Module):
         all_cross_attentions = (
             () if output_attentions and self.config.add_cross_attention else None
         )
-        # TODO: xzp, delete embedding_out from all_hidden_states
         for i, layer_module in enumerate(self.layer):
 
             if output_hidden_states:
