@@ -1,6 +1,7 @@
 from tqdm import tqdm
 from loguru import logger
 import numpy as np
+from scipy.stats import spearmanr
 
 import oneflow as flow
 
@@ -40,10 +41,8 @@ def eval(model, dataloader, device):
     return spearmanr(label_array, sim_tensor.cpu().numpy()).correlation
 
 
-def train(model, train_dataloader, dev_dataloader, lr, early_stop, device, save_path):
+def train(model, train_dataloader, dev_dataloader, lr, best_score, early_stop, device, save_path):
     model.train()
-
-    global best
     if early_stop:
         early_stop_step = 0
     optimizer = flow.optim.AdamW(model.parameters(), lr=lr)
@@ -62,14 +61,14 @@ def train(model, train_dataloader, dev_dataloader, lr, early_stop, device, save_
 
         if step % 10 == 0:
             logger.info(f'loss: {loss.item():.4f}')
-            corrcoef = eval(model, dev_dataloader)
+            corrcoef = eval(model, dev_dataloader, device)
             
-            if best < corrcoef:
+            if best_score < corrcoef:
                 if early_stop:
                     early_stop_step = 0 
-                best = corrcoef
+                best_score = corrcoef
                 flow.save(model.state_dict(), save_path)
-                logger.info(f"higher corrcoef: {best:.4f} in batch: {step}, save model")
+                logger.info(f"higher corrcoef: {best_score:.4f} in batch: {step}, save model")
                 continue
 
             if early_stop:

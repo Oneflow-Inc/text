@@ -1,7 +1,9 @@
 from typing import Dict, List
+import jsonlines
+import random
 
 import oneflow as flow
-from oneflow.utils.data import DataLoader, Dataset
+from oneflow.utils.data import Dataset
 
 
 def load_data(name: str, path: str) -> List:
@@ -33,14 +35,14 @@ def load_data(name: str, path: str) -> List:
 
 
 class TrainDataset(Dataset):
-    def __init__(self, name, path, tokenizer, task, max_len, name2='sts', path2=None):
+    def __init__(self, name, path, tokenizer,  max_len, task=None, name2='sts', path2=None):
         self.task = task
         self.data = load_data(name, path)
         if path2 is not None:
-            data2 = load_data(='sts', path2)
+            data2 = load_data(name2, path2)
             data2 = [i[0] for i in data2]
             self.data = self.data + data2
-        if name == 'snli':
+        if 'snli' in name:
             random.shuffle(self.data)
         self.tokenizer = tokenizer
         self.max_len = max_len
@@ -74,7 +76,7 @@ class TrainDataset(Dataset):
             "attention_mask" : flow.tensor([mask0, mask1, mask2], dtype=flow.long)
         }
     
-    def unsupervised_task(self, index):
+    def unsupervise_task(self, index):
         ids, mask = self.text2id(self.data[index])
         return {
             "input_ids" : flow.tensor([ids, ids], dtype=flow.long),
