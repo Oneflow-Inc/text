@@ -9,12 +9,24 @@ def cosine_similarity(x, y, dim=-1):
     )
 
 
+class MLP(nn.Module):
+    def __init__(self, hidden_size):
+        super().__init__()
+        self.dense = nn.Linear(hidden_size, hidden_size)
+        self.act = nn.Tanh()
+    
+    def forward(self, hidden):
+        x = self.dense(hidden)
+        x = self.act(x)
+        return x
+
+
 class Simcse(nn.Module):
     def __init__(self, bert, task, pooler_type='cls'):
         super().__init__()
         self.bert = bert
         hidden_size = self.bert.config.hidden_size
-        self.mlp = nn.Linear(hidden_size, hidden_size)
+        self.mlp = MLP(hidden_size)
         self.task = task
         self.pooler_type = pooler_type
 
@@ -62,7 +74,7 @@ class Simcse(nn.Module):
     def forward(self, input_ids, attention_mask, token_type_ids=None):
         out = self.bert(input_ids, attention_mask, token_type_ids, output_hidden_states=True)
         out = self.pooler(out, attention_mask)
-        # out = self.mlp(out)
+        out = self.mlp(out)
 
         if self.training:
             if self.task == 'sup':

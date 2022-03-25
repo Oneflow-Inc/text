@@ -1,3 +1,5 @@
+import os
+import shutil
 from tqdm import tqdm
 from loguru import logger
 import numpy as np
@@ -67,6 +69,8 @@ def train(model, train_dataloader, dev_dataloader, lr, best_score, early_stop, d
                 if early_stop:
                     early_stop_step = 0 
                 best_score = corrcoef
+                if os.path.exists(save_path):
+                    shutil.rmtree(save_path)
                 flow.save(model.state_dict(), save_path)
                 logger.info(f"higher corrcoef: {best_score:.4f} in batch: {step}, save model")
                 continue
@@ -76,4 +80,4 @@ def train(model, train_dataloader, dev_dataloader, lr, best_score, early_stop, d
                 if early_stop_step == 30:
                     logger.info(f"corrcoef doesn't improve for {early_stop_step} batch, early stop!")
                     logger.info(f"train use sample number: {(step - 10) * bs}")
-                    return 
+                    return

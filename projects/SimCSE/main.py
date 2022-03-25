@@ -51,8 +51,8 @@ def main(args):
     logger.info(f'device: {device}, model path: {pretrained_path}')
 
     bert, tokenizer, _ = BertModel(pretrained=True, model_type=model_type, checkpoint_path=pretrained_path)
-    # bert.hidden_dropout_prob = dropout
-    # bert.attention_probs_dropout_prob = dropout
+    bert.hidden_dropout_prob = dropout
+    bert.attention_probs_dropout_prob = dropout
 
     train_dataloader = DataLoader(TrainDataset(
         train_data_name, 

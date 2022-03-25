@@ -8,11 +8,11 @@ SimCSE is a sentence representation learning method, in which there are two trai
 
 ## Evaluation
 Dataset: SNLI+STS
-|      Unsupervised-Model        | Avg. STS |
+|      Unsupervised-Model        |STS-B dev |
 |:-------------------------------|:--------:|
-|unsup-simcse-bert-base-chinese  |   71.74  |
+|unsup-simcse-bert-base-chinese  |   72.55  |
 
 Dataset: SNLI
-|       Supervised-Model         | Avg. STS |
+|       Supervised-Model         |STS-B dev |
 |:-------------------------------|:--------:|
 |unsup-simcse-bert-base-chinese  |   80.23  |

@@ -1,18 +1,18 @@
 set -aux
 
 
-# DATA_PATH="data"
-# if [ ! -d "$DATA_PATH" ]; then
-#     wget https://oneflow-public.oss-cn-beijing.aliyuncs.com/datasets/seq2seq_data.tar.gz
-#     tar -xzvf seq2seq_data.tar.gz
-# fi
+DATA_PATH="datasets"
+if [ ! -d "$DATA_PATH" ]; then
+    wget http://oneflow-public.oss-cn-beijing.aliyuncs.com/datasets/FlowText/SimCSE/datasets.zip
+    unzip datasets.tar.gz
+fi
 
 TASK='sup'
 DEVICE='cuda'
 EPOCHS=1
 LR=1e-5
-BATCH_SIZE=32
-DROPOUT=0.1
+BATCH_SIZE=64
+DROPOUT=0.3
 POOLER_TYPE='cls'
 MODEL_TYPE="bert-base-chinese"
 PRETRAIND_PATH='/home/xiezipeng/text/pretrained_flow/bert-base-chinese-oneflow'
