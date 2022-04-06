@@ -558,7 +558,7 @@ class BertModel(nn.Module):
             ) * -1e9
         else:
             raise ValueError(
-                f"{self.dtype} not recognized. `dtype` should be set to either `torch.float32` or `torch.float16`"
+                f"{self.dtype} not recognized. `dtype` should be set to either `flow.float32` or `flow.float16`"
             )
         return encoder_extended_attention_mask
 
