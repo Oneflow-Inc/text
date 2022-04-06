@@ -52,7 +52,6 @@ def train(model, train_dataloader, dev_dataloader, lr, best_score, early_stop, d
     for step, batch in enumerate(tqdm(train_dataloader), start=1):
         size = batch['input_ids'].size()
         bs, num_sent = size[0], size[1]
-
         input_ids = batch['input_ids'].view(bs * num_sent, -1).to(device)
         attention_mask = batch['attention_mask'].view(bs * num_sent, -1).to(device)
 

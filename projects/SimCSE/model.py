@@ -41,7 +41,9 @@ class Simcse(nn.Module):
         
         elif self.pooler_type == 'last-avg':
             last_hidden = inputs[0].permute(0, 2, 1)
-            last_hidden = last_hidden * attention_mask.unsqueeze(-1)
+            # print(last_hidden.size())
+            # print(attention_mask.unsqueeze(-1).size())
+            last_hidden = last_hidden * attention_mask.unsqueeze(1)
             return nn.AvgPool1d(kernel_size=last_hidden.size(-1))(last_hidden).squeeze(-1)
 
         elif self.pooler_type == 'first-last-avg':
@@ -74,7 +76,8 @@ class Simcse(nn.Module):
     def forward(self, input_ids, attention_mask, token_type_ids=None):
         out = self.bert(input_ids, attention_mask, token_type_ids, output_hidden_states=True)
         out = self.pooler(out, attention_mask)
-        out = self.mlp(out)
+        if self.task == "unsup":
+            out = self.mlp(out)
 
         if self.training:
             if self.task == 'sup':

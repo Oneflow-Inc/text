@@ -10,10 +10,10 @@ fi
 TASK='sup'
 DEVICE='cuda'
 EPOCHS=1
-LR=1e-5
+LR=3e-5
 BATCH_SIZE=64
 DROPOUT=0.3
-POOLER_TYPE='cls'
+POOLER_TYPE='last-avg'
 MODEL_TYPE="bert-base-chinese"
 PRETRAIND_PATH='/home/xiezipeng/text/pretrained_flow/bert-base-chinese-oneflow'
 SAVE_PATH='./saved_model/simcse_sup'
@@ -35,4 +35,3 @@ python3 main.py \
     --train_data_path $TRAIN_DATA_PATH \
     --dev_data_path $DEV_DATA_PATH \
     --test_data_path $TEST_DATA_PATH \
-    
