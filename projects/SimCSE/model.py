@@ -41,8 +41,6 @@ class Simcse(nn.Module):
         
         elif self.pooler_type == 'last-avg':
             last_hidden = inputs[0].permute(0, 2, 1)
-            # print(last_hidden.size())
-            # print(attention_mask.unsqueeze(-1).size())
             last_hidden = last_hidden * attention_mask.unsqueeze(1)
             return nn.AvgPool1d(kernel_size=last_hidden.size(-1))(last_hidden).squeeze(-1)
 
