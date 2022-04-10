@@ -4,7 +4,7 @@ set -aux
 DATA_PATH="datasets"
 if [ ! -d "$DATA_PATH" ]; then
     wget http://oneflow-public.oss-cn-beijing.aliyuncs.com/datasets/FlowText/SimCSE/datasets.zip
-    unzip datasets.tar.gz
+    unzip datasets.zip
 fi
 
 TASK='sup'
