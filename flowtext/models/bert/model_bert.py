@@ -370,7 +370,6 @@ class BertEncoder(nn.Module):
         all_cross_attentions = (
             () if output_attentions and self.config.add_cross_attention else None
         )
-
         for i, layer_module in enumerate(self.layer):
 
             if output_hidden_states:
@@ -559,7 +558,7 @@ class BertModel(nn.Module):
             ) * -1e9
         else:
             raise ValueError(
-                f"{self.dtype} not recognized. `dtype` should be set to either `torch.float32` or `torch.float16`"
+                f"{self.dtype} not recognized. `dtype` should be set to either `flow.float32` or `flow.float16`"
             )
         return encoder_extended_attention_mask
 

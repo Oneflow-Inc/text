@@ -3,6 +3,7 @@ import logging
 import os
 import tarfile
 import zipfile
+from functools import partial
 from urllib.request import urlretrieve
 
 import oneflow as flow
@@ -34,17 +35,17 @@ class Vectors(object):
     def __init__(self, name, cache=None, url=None, unk_init=None, max_vectors=None):
         """
         Args:
-                name: name of the file that contains the vectors.
-                cache: directory for cached vectors.
-                url: url for download if vectors not found in cache.
-                unk_init (callback): by default, initialize out-of-vocabulary word vectors
-                    to zero vectors; can be any function that takes in a Tensor and returns
-                    a Tensor of the same size.
-                max_vectors (int): this can be used to limit the number of pre-trained 
-                    vectors loaded. Most pre-trained vector sets are sorted in the
-                    descending order of word frequency. Thus, in situations where the
-                    entire set doesn't fit in memory, or is not needed for another 
-                    reason, passing `max_vectors` can limit the size of the loaded set.
+            name: name of the file that contains the vectors.
+            cache: directory for cached vectors.
+            url: url for download if vectors not found in cache.
+            unk_init (callback): by default, initialize out-of-vocabulary word vectors
+                to zero vectors; can be any function that takes in a Tensor and returns
+                a Tensor of the same size.
+            max_vectors (int): this can be used to limit the number of pre-trained 
+                vectors loaded. Most pre-trained vector sets are sorted in the
+                descending order of word frequency. Thus, in situations where the
+                entire set doesn't fit in memory, or is not needed for another 
+                reason, passing `max_vectors` can limit the size of the loaded set.
         """
 
         cache = ".vector_cache" if cache is None else cache
@@ -143,9 +144,9 @@ class Vectors(object):
                     try:
                         if isinstance(word, bytes):
                             word = word.decode("utf-8")
-                        except UnicodeDecodeError:
-                            logger.info("Skipping non-UTF8 token {}".format(repr(word)))
-                            continue
+                    except UnicodeDecodeError:
+                        logger.info("Skipping non-UTF8 token {}".format(repr(word)))
+                        continue
                         
                     vectors[vectors_loaded] = flow.tensor([float(x) for x in entries])
                     vectors_loaded += 1
@@ -162,7 +163,6 @@ class Vectors(object):
             if not os.path.exists(cache):
                 os.makedirs(cache)
             flow.save((self.itos, self.stoi, self.vectors, self.dim), path_of)
-
         else:
             logger.info("Loading vectors from {}".format(path_of))
             self.itos, self.stoi, self.vectors, self.dim = flow.load(path_of)
