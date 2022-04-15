@@ -74,14 +74,11 @@ class Simcse(nn.Module):
     def forward(self, input_ids, attention_mask, token_type_ids=None):
         out = self.bert(input_ids, attention_mask, token_type_ids, output_hidden_states=True)
         out = self.pooler(out, attention_mask)
-        if self.task == "unsup":
-            out = self.mlp(out)
-
         if self.training:
+            out = self.mlp(out)
             if self.task == 'sup':
                 loss = self.loss_sup(out)
             else:
                 loss = self.loss_unsup(out)
             return loss
-
         return out
