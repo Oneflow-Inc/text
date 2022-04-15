@@ -49,7 +49,8 @@ def main(args):
     test_data_name = 'sts'
 
     logger.info(f'device: {device}, model path: {pretrained_path}')
-
+    if not os.path.exists(pretrained_path):
+        pretrained_path = None
     bert, tokenizer, _ = BertModel(pretrained=True, model_type=model_type, checkpoint_path=pretrained_path)
     bert.hidden_dropout_prob = dropout
     bert.attention_probs_dropout_prob = dropout
